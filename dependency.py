@@ -27,14 +27,14 @@ def dependency(res,pair,guess=1,c=4):
 
 	# calculate dependency for independent model
 
-	acc        = res2.mean() # calculate accuracy for each retrieval type
+	acc         = res2.mean() # calculate accuracy for each retrieval type
 	dep[1]      = acc[0]*acc[1] # calculate dependenct for independent model
 
 	# calculate dependency for dependent model
 
 	cont        = np.empty((len(res2),2,2))*np.nan # create matrix for dependent model probabilities
 	g           = (1-res.values.mean())*(c/(c-1)) # calculate level of guessing
-	b           = np.mean(res); b[pair] = np.nan # calculate average performance
+	b           = res.mean(axis=0); b[pair] = np.nan # calculate average performance
 	for i, a in res.iterrows(): # loop through all event   
 		a[pair] = np.nan  # calculate event specific performance
 		E       = a.mean()/b.mean() # calculate ratio of event / average performance (episodic factor)
