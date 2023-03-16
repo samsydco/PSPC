@@ -132,7 +132,7 @@ sns.boxplot(data=dependencydf, x="Age", y="Dependency", palette="vlag",order=ord
 sns.stripplot(data=dependencydf, x="Age", y="Dependency", color=".3",order=order,jitter=False)
 v = ax.collections[2].get_offsets().data[0][0]
 data = list(dependencydf[(dependencydf.Pilot)]['Dependency'])
-ax.scatter(v*np.ones(len(data)),data,marker='*',color='r', s=600,zorder=3)
+ax.scatter(v*np.ones(len(data)),data,marker='*',color='r',alpha=0.75, s=600,zorder=3)
 fig.savefig(figurepath+'dependency.png', bbox_inches='tight', dpi=100)
 
 
@@ -163,7 +163,7 @@ for i,pair in enumerate(PCcols):
 	sns.stripplot(data=tempdf, x="Age", y="Accuracy", dodge=True,color=".3",order=ordertmp,s=10,jitter=False)
 	v = ax.collections[2].get_offsets().data[0][0]
 	data = list(tempdf[(tempdf.Pilot)]['Accuracy'])
-	ax.scatter(v*np.ones(len(data)),data,marker='*',color='r', s=600,zorder=3)
+	ax.scatter(v*np.ones(len(data)),data,marker='*',color='r',alpha=0.4, s=600,zorder=3)
 	plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
 	plt.title(pairstring)
 	plt.axhline(y=0.25, color='b', linestyle='--')
