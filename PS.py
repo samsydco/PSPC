@@ -12,14 +12,9 @@ import seaborn as sns
 import math
 from scipy import stats
 
-#figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
-#datadf = pd.read_csv('datadf.csv')
-#Contdict = dd.io.load('PSPC_cont_tables.h5')
-
-# Temporary code for looking at pilot data
-figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/Pilot/'
-datadf = pd.read_csv('pilotdatadf.csv')
-Contdict = dd.io.load('Pilot_cont_tables.h5')
+figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
+datadf = pd.read_csv('datadf.csv')
+Contdict = dd.io.load('PSPC_cont_tables.h5')
 
 
 PScols = ['object','location','animal']
@@ -29,23 +24,22 @@ output = []
 for subject,tmp in tqdm.tqdm(Contdict.items()):
 	PStmp = tmp[PScols].to_numpy()
 	age = datadf['Age'][datadf['Subject']==subject].values[0]
-	if not math.isnan(age):
-		pilot=False if 'MDEM' in subject else True
-		condition = datadf['Condition'][datadf['Subject']==subject].values[0]
-		nitems = np.count_nonzero(~np.isnan(PStmp.astype(float))) # PStmp.size (if did both blocks)
-		for value in PSkey.keys():
-			output.append(
-				{
-					'Subject': subject,
-					'Pilot':pilot,
-					'Condition':condition,
-					'Age':age,
-					'Selection':PSkey[value],
-					'Proportion Selected': np.count_nonzero(PStmp == value) / nitems
-				})
+	delay=datadf[datadf['Subject']==subject]['Delay'].iloc[0]
+	nitems = np.count_nonzero(~np.isnan(PStmp.astype(float))) # PStmp.size (if did both blocks)
+	for value in PSkey.keys():
+		output.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Age':age,
+				'Selection':PSkey[value],
+				'Proportion Selected': np.count_nonzero(PStmp == value) / nitems
+			})
 	
 outputdf = pd.DataFrame(output)
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
+delaydf = outputdf[(outputdf.Delay)]
+nodelaydf = outputdf[(outputdf.Delay == False)]
 
 order = ['Target','Lure','Foil']
 orderage = [4,5,6,7]
@@ -55,14 +49,19 @@ sns.set(font_scale=2)
 fig, ax = plt.subplots(figsize=(7, 6))
 sns.boxplot(data=outputdf, x="Selection", y="Proportion Selected", hue="Age", palette="vlag",order=order, showfliers = False)
 sns.stripplot(data=outputdf, x="Selection", y="Proportion Selected", hue="Age", dodge=True,color=".3",order=order, jitter=False)
-vs = []
+vs = {k:[] for k in orderage}
 for i,points in enumerate(ax.collections):
-    vertices = points.get_offsets().data
-    if len(vertices)>0 and (i+2) % 4 == 0 :
-        vs.append(vertices[0][0])
-for i,selection in enumerate(order):
-	data = list(outputdf[(outputdf.Pilot) & (outputdf.Selection == order[i])]['Proportion Selected'])
-	ax.scatter(vs[i]*np.ones(len(data)),data,marker='*',color='r',alpha=0.75, s=300,zorder=3)
+	vertices = points.get_offsets().data
+	if len(vertices)>0:
+		for ii,a in enumerate([4,7,6,5]):
+			if (i+ii) % 4 == 0:
+				vs[a].append(vertices[0][0])
+for subject in delaydf.Subject.unique():
+	tmp = delaydf[delaydf.Subject == subject]
+	age = tmp['Age'].iloc[0]
+	for i,selection in enumerate(order):
+		data = tmp[tmp.Selection==selection]['Proportion Selected'].iloc[0]
+		ax.scatter(vs[age][i],data,marker='*',color='r',alpha=0.75, s=300,zorder=3)
 
 handles, labels = ax.get_legend_handles_labels()
 l = plt.legend(handles[0:4], labels[0:4], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
