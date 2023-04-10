@@ -12,14 +12,9 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
-#figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
-#datadf = pd.read_csv('datadf.csv')
-#Contdict = dd.io.load('PSPC_cont_tables.h5')
-
-# Temporary code for looking at pilot data
-figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/Pilot/'
-datadf = pd.read_csv('pilotdatadf.csv')
-Contdict = dd.io.load('Pilot_cont_tables.h5')
+figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
+datadf = pd.read_csv('datadf.csv')
+Contdict = dd.io.load('PSPC_cont_tables.h5')
 
 PCcols = ['Ab', 'Bc', 'Ba', 'Cb', 'Ac', 'Ca']
 pair_array = [['Ab','Ac'],['Ba','Bc'],['Ca','Cb'],['Ba','Ca'],['Ac','Bc'],['Ab','Cb']]
@@ -31,73 +26,73 @@ meanoutput = [] # average across pairs for data and independent model
 dependencylist = [] # dependency values per subject
 for subject,res_tmp in tqdm.tqdm(Contdict.items()):
 	# PILOT4 only completed Day 1:
-	if np.isnan(np.sum(np.array(res_tmp)[9:,6:])):
-		res_tmp = res_tmp.iloc[:9]
+	#if np.isnan(np.sum(np.array(res_tmp)[9:,6:])):
+	#	res_tmp = res_tmp.iloc[:9]
+	tmp = datadf[datadf['Subject']==subject]
 	dep_all = np.nan*np.zeros((len(pair_array),3))
-	age = datadf['Age'][datadf['Subject']==subject].values[0]
+	age = tmp['Age'].values[0]
 	accuracy = res_tmp[PCcols].stack().mean()
-	if not math.isnan(age):
-		pilot=False if 'MDEM' in subject else True
-		for pair in PCcols:
-			pairaccuracy.append(
+	delay = tmp['Delay'].values[0]
+	for pair in PCcols:
+		pairaccuracy.append(
+		{
+			'Subject': subject,
+			'Delay':delay,
+			'Age':age,
+			'Pair': ABC[pair[0]]+'->'+ABC[pair[1].upper()],
+			'Cue': ABC[pair[0]],
+			'To-be-retrieved': ABC[pair[1].upper()],
+			'Accuracy': res_tmp[pair].mean() 
+		})
+	for i,pair in enumerate(pair_array):
+		res = res_tmp[PCcols] # no idea why this needs to be in loop
+		dep = dependency (res, pair)
+		if pair[0][0] == pair[1][0]:
+			cue = pair[0][0]
+		elif pair[0][1] == pair[1][1]:
+			cue = pair[0][1].upper()
+		output.append(
+		{
+			'Subject': subject,
+			'Delay':delay,
+			'Age':age,
+			'Pair': pair[0]+' '+pair[1],
+			'Cue':cue,
+			'Dependency':dep[0] - dep[1],
+			'Data': dep[0],
+			'Independent Model': dep[1],
+			'Dependent Model': dep[2],
+			'Accuracy': res_tmp[pair].stack().mean() 
+		})
+		dep_all[i]=dep
+	depmean = np.nanmean(dep_all,axis=0)
+	if np.mean(depmean) != 1:
+		meanoutput.append(
 			{
 				'Subject': subject,
-				'Pilot':pilot,
-				'Age':age,
-				'Pair': ABC[pair[0]]+'->'+ABC[pair[1].upper()],
-				'Cue': ABC[pair[0]],
-				'To-be-retrieved': ABC[pair[1].upper()],
-				'Accuracy': res_tmp[pair].mean() 
+				'Delay':delay,
+				'Data Type':'Data',
+				'Proportion of Joint Retrieval': depmean[0],
+				'Age': age
 			})
-		for i,pair in enumerate(pair_array):
-			res = res_tmp[PCcols] # no idea why this needs to be in loop
-			dep = dependency (res, pair)
-			if pair[0][0] == pair[1][0]:
-				cue = pair[0][0]
-			elif pair[0][1] == pair[1][1]:
-				cue = pair[0][1].upper()
-			output.append(
+		meanoutput.append(
 			{
 				'Subject': subject,
-				'Pilot':pilot,
-				'Age':age,
-				'Pair': pair[0]+' '+pair[1],
-				'Cue':cue,
-				'Dependency':dep[0] - dep[1],
-				'Data': dep[0],
-				'Independent Model': dep[1],
-				'Dependent Model': dep[2],
-				'Accuracy': res_tmp[pair].stack().mean() 
+				'Delay':delay,
+				'Data Type':'Independent Model',
+				'Proportion of Joint Retrieval': depmean[1],
+				'Age': age
 			})
-			dep_all[i]=dep
-		depmean = np.nanmean(dep_all,axis=0)
-		if np.mean(depmean) != 1:
-			meanoutput.append(
-				{
-					'Subject': subject,
-					'Pilot':pilot,
-					'Data Type':'Data',
-					'Proportion of Joint Retrieval': depmean[0],
-					'Age': age
-				})
-			meanoutput.append(
-				{
-					'Subject': subject,
-					'Pilot':pilot,
-					'Data Type':'Independent Model',
-					'Proportion of Joint Retrieval': depmean[1],
-					'Age': age
-				})
-			dependencylist.append(
-				{
-					'Subject': subject,
-					'Pilot':pilot,
-					'Dependency':depmean[0] - depmean[1],
-					'Age': age,
-					'Accuracy':accuracy
-				})
-		else:
-			print(subject)
+		dependencylist.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Dependency':depmean[0] - depmean[1],
+				'Age': age,
+				'Accuracy':accuracy
+			})
+	else:
+		print(subject)
 		
 outputdf = pd.DataFrame(output)
 pairaccuracydf = pd.DataFrame(pairaccuracy)
@@ -130,9 +125,13 @@ fig, ax = plt.subplots(figsize=(7, 6))
 
 sns.boxplot(data=dependencydf, x="Age", y="Dependency", palette="vlag",order=order, showfliers = False)
 sns.stripplot(data=dependencydf, x="Age", y="Dependency", color=".3",order=order,jitter=False)
-v = ax.collections[2].get_offsets().data[0][0]
-data = list(dependencydf[(dependencydf.Pilot)]['Dependency'])
-ax.scatter(v*np.ones(len(data)),data,marker='*',color='r',alpha=0.75, s=600,zorder=3)
+delaydf = dependencydf[dependencydf.Delay]
+for subj in delaydf.Subject:
+	tmp = delaydf[delaydf.Subject==subj]
+	age = tmp.Age.iloc[0]
+	i = [i for i,v in enumerate(order) if v==age][0]
+	v = ax.collections[i].get_offsets().data[0][0]
+	ax.scatter(v,tmp.Dependency.iloc[0],marker='*',color='r',alpha=0.75, s=600,zorder=3)
 fig.savefig(figurepath+'dependency.png', bbox_inches='tight', dpi=100)
 
 
@@ -161,13 +160,17 @@ for i,pair in enumerate(PCcols):
 	pairacclist.append({'Pair':pairstring,'N':len(tempdf),'df':len(tempdf)-1,'95% CI':sms.DescrStatsW(accvals).tconfint_mean(),'t-stat':ttest[0], 'p-value':ttest[1]})
 	sns.boxplot(data=tempdf, x="Age", y="Accuracy", palette="vlag",order=ordertmp, showfliers = False)
 	sns.stripplot(data=tempdf, x="Age", y="Accuracy", dodge=True,color=".3",order=ordertmp,s=10,jitter=False)
-	v = ax.collections[2].get_offsets().data[0][0]
-	data = list(tempdf[(tempdf.Pilot)]['Accuracy'])
-	ax.scatter(v*np.ones(len(data)),data,marker='*',color='r',alpha=0.4, s=600,zorder=3)
+	delaydf = tempdf[tempdf.Delay]
+	for subj in delaydf.Subject:
+		tmp = delaydf[delaydf.Subject==subj]
+		age = tmp.Age.iloc[0]
+		i = [i for i,v in enumerate(ordertmp) if v==age][0]
+		v = ax.collections[i].get_offsets().data[0][0]
+		ax.scatter(v,tmp.Accuracy.iloc[0],marker='*',color='r',alpha=0.75, s=600,zorder=3)
 	plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
 	plt.title(pairstring)
 	plt.axhline(y=0.25, color='b', linestyle='--')
-	ax.set(ylim=(0.2,1.05))
+	ax.set(ylim=(0,1.05))
 	if i>0:
 		ax.yaxis.set_visible(False)
 fig.tight_layout()
