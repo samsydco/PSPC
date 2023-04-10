@@ -12,7 +12,7 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
-figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
+figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('datadf.csv')
 Contdict = dd.io.load('PSPC_cont_tables.h5')
 
@@ -92,12 +92,15 @@ for subject,res_tmp in tqdm.tqdm(Contdict.items()):
 				'Accuracy':accuracy
 			})
 	else:
-		print(subject)
+		print(subject+' had perfect accuracy!')
 		
 outputdf = pd.DataFrame(output)
 pairaccuracydf = pd.DataFrame(pairaccuracy)
 meanoutputdf = pd.DataFrame(meanoutput)
 dependencydf = pd.DataFrame(dependencylist)
+
+dependencydf.to_csv('Dependency.csv',index=False)
+
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
 pairaccuracydf['Age'] = pairaccuracydf['Age'].map(lambda age: math.floor(age))
 meanoutputdf['Age'] = meanoutputdf['Age'].map(lambda age: math.floor(age))
