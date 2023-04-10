@@ -12,7 +12,7 @@ import seaborn as sns
 import math
 from scipy import stats
 
-figurepath = onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
+figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('datadf.csv')
 Contdict = dd.io.load('PSPC_cont_tables.h5')
 
@@ -37,6 +37,7 @@ for subject,tmp in tqdm.tqdm(Contdict.items()):
 			})
 	
 outputdf = pd.DataFrame(output)
+outputdf.to_csv('PS.csv',index=False)
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
 delaydf = outputdf[(outputdf.Delay)]
 nodelaydf = outputdf[(outputdf.Delay == False)]
