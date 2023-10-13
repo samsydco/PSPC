@@ -12,9 +12,13 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
+year = 1
+
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('datadf.csv')
 Contdict = dd.io.load('PSPC_cont_tables.h5')
+datadf = datadf[datadf['Year'] == year]
+
 
 PCcols = ['Ab', 'Bc', 'Ba', 'Cb', 'Ac', 'Ca']
 pair_array = [['Ab','Ac'],['Ba','Bc'],['Ca','Cb'],['Ba','Ca'],['Ac','Bc'],['Ab','Cb']]
@@ -24,7 +28,7 @@ pairaccuracy = []
 output = [] # data, and independent model are seperate, seperate data for all pairs in pair_array
 meanoutput = [] # average across pairs for data and independent model
 dependencylist = [] # dependency values per subject
-for subject,res_tmp in tqdm.tqdm(Contdict.items()):
+for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 	# PILOT4 only completed Day 1:
 	#if np.isnan(np.sum(np.array(res_tmp)[9:,6:])):
 	#	res_tmp = res_tmp.iloc[:9]
@@ -99,7 +103,10 @@ pairaccuracydf = pd.DataFrame(pairaccuracy)
 meanoutputdf = pd.DataFrame(meanoutput)
 dependencydf = pd.DataFrame(dependencylist)
 
-dependencydf.to_csv('Dependency.csv',index=False)
+dependencydf.to_csv('Dependency_Year_'+str(year)+'.csv',index=False)
+
+# exclude all subjects with over 95% accuracy:
+dependencydf = dependencydf[dependencydf['Accuracy']<0.95]
 
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
 pairaccuracydf['Age'] = pairaccuracydf['Age'].map(lambda age: math.floor(age))
@@ -167,8 +174,8 @@ for i,pair in enumerate(PCcols):
 	for subj in delaydf.Subject:
 		tmp = delaydf[delaydf.Subject==subj]
 		age = tmp.Age.iloc[0]
-		i = [i for i,v in enumerate(ordertmp) if v==age][0]
-		v = ax.collections[i].get_offsets().data[0][0]
+		ii = [ii for ii,v in enumerate(ordertmp) if v==age][0]
+		v = ax.collections[ii].get_offsets().data[0][0]
 		ax.scatter(v,tmp.Accuracy.iloc[0],marker='*',color='r',alpha=0.75, s=600,zorder=3)
 	plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
 	plt.title(pairstring)
