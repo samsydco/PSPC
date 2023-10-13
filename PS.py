@@ -12,32 +12,40 @@ import seaborn as sns
 import math
 from scipy import stats
 
+year = 1
+
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('datadf.csv')
 Contdict = dd.io.load('PSPC_cont_tables.h5')
+datadf = datadf[datadf['Year'] == year]
 
 
 PScols = ['object','location','animal']
 PSkey = {-1:'Foil',1:'Target',0:'Lure'}
 
 output = []
-for subject,tmp in tqdm.tqdm(Contdict.items()):
+percatoutput = []
+for subject,tmp in tqdm.tqdm(Contdict[year].items()):
 	PStmp = tmp[PScols].to_numpy()
-	age = datadf['Age'][datadf['Subject']==subject].values[0]
-	delay=datadf[datadf['Subject']==subject]['Delay'].iloc[0]
+	tmpdf = datadf[datadf['Subject']==subject]
+	age = tmpdf['Age'].values[0]
+	delay=tmpdf['Delay'].iloc[0]
 	nitems = np.count_nonzero(~np.isnan(PStmp.astype(float))) # PStmp.size (if did both blocks)
+	d_ = {'Subject': subject,'Delay':delay,'Age':age}
+	d = d_.copy()
+	for col in PScols:
+		d[col+' target selection rate'] = np.count_nonzero(tmp[col] == 1) / (nitems/3)
+	percatoutput.append(d)
 	for value in PSkey.keys():
-		output.append(
-			{
-				'Subject': subject,
-				'Delay':delay,
-				'Age':age,
-				'Selection':PSkey[value],
-				'Proportion Selected': np.count_nonzero(PStmp == value) / nitems
-			})
+		d2 = d_.copy()
+		d2['Selection'] = PSkey[value]
+		d2['Proportion Selected']  = np.count_nonzero(PStmp == value) / nitems
+		output.append(d2)
 	
 outputdf = pd.DataFrame(output)
-outputdf.to_csv('PS.csv',index=False)
+percatoutputdf = pd.DataFrame(percatoutput)
+outputdf.to_csv('PS_Year_'+str(year)+'.csv',index=False)
+percatoutputdf.to_csv('PS_cat_Year_'+str(year)+'.csv',index=False)
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
 delaydf = outputdf[(outputdf.Delay)]
 nodelaydf = outputdf[(outputdf.Delay == False)]
