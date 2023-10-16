@@ -15,8 +15,8 @@ from scipy import stats
 year = 1
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
-datadf = pd.read_csv('datadf.csv')
-Contdict = dd.io.load('PSPC_cont_tables.h5')
+datadf = pd.read_csv('csvs/datadf.csv')
+Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
 
 
