@@ -57,7 +57,7 @@ orderage = [4,5,6,7]
 sns.set(font_scale=2)
 fig, ax = plt.subplots(figsize=(7, 6))
 sns.boxplot(data=outputdf, x="Selection", y="Proportion Selected", hue="Age", palette="vlag",order=order, showfliers = False)
-sns.stripplot(data=outputdf, x="Selection", y="Proportion Selected", hue="Age", dodge=True,color=".3",order=order, jitter=False)
+sns.stripplot(data=outputdf, x="Selection", y="Proportion Selected", hue="Age", dodge=True,color=".3",order=order, jitter=False,legend=False)
 vs = {k:[] for k in orderage}
 for i,points in enumerate(ax.collections):
 	vertices = points.get_offsets().data
@@ -71,7 +71,6 @@ for subject in delaydf.Subject.unique():
 	for i,selection in enumerate(order):
 		data = tmp[tmp.Selection==selection]['Proportion Selected'].iloc[0]
 		ax.scatter(vs[age][i],data,marker='*',color='r',alpha=0.75, s=300,zorder=3)
-
 handles, labels = ax.get_legend_handles_labels()
 l = plt.legend(handles[0:4], labels[0:4], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 ax.set(xlabel=None)
