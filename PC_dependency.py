@@ -15,8 +15,8 @@ from decimal import Decimal
 year = 1
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
-datadf = pd.read_csv('datadf.csv')
-Contdict = dd.io.load('PSPC_cont_tables.h5')
+datadf = pd.read_csv('csvs/datadf.csv')
+Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
 
 
@@ -103,7 +103,7 @@ pairaccuracydf = pd.DataFrame(pairaccuracy)
 meanoutputdf = pd.DataFrame(meanoutput)
 dependencydf = pd.DataFrame(dependencylist)
 
-dependencydf.to_csv('Dependency_Year_'+str(year)+'.csv',index=False)
+dependencydf.to_csv('csvs/Dependency_Year_'+str(year)+'.csv',index=False)
 
 # exclude all subjects with over 95% accuracy:
 dependencydf = dependencydf[dependencydf['Accuracy']<0.95]
