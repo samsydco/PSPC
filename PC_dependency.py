@@ -70,33 +70,32 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 		})
 		dep_all[i]=dep
 	depmean = np.nanmean(dep_all,axis=0)
-	if np.mean(depmean) != 1:
-		meanoutput.append(
-			{
-				'Subject': subject,
-				'Delay':delay,
-				'Data Type':'Data',
-				'Proportion of Joint Retrieval': depmean[0],
-				'Age': age
-			})
-		meanoutput.append(
-			{
-				'Subject': subject,
-				'Delay':delay,
-				'Data Type':'Independent Model',
-				'Proportion of Joint Retrieval': depmean[1],
-				'Age': age
-			})
-		dependencylist.append(
-			{
-				'Subject': subject,
-				'Delay':delay,
-				'Dependency':depmean[0] - depmean[1],
-				'Age': age,
-				'Accuracy':accuracy
-			})
-	else:
-		print(subject+' had perfect accuracy!')
+	meanoutput.append(
+		{
+			'Subject': subject,
+			'Delay':delay,
+			'Data Type':'Data',
+			'Proportion of Joint Retrieval': depmean[0],
+			'Age': age
+		})
+	meanoutput.append(
+		{
+			'Subject': subject,
+			'Delay':delay,
+			'Data Type':'Independent Model',
+			'Proportion of Joint Retrieval': depmean[1],
+			'Age': age
+		})
+	dependencylist.append(
+		{
+			'Subject': subject,
+			'Delay':delay,
+			'Dependency':depmean[0] - depmean[1],
+			'Age': age,
+			'Accuracy':accuracy
+		})
+
+
 		
 outputdf = pd.DataFrame(output)
 pairaccuracydf = pd.DataFrame(pairaccuracy)
@@ -104,6 +103,27 @@ meanoutputdf = pd.DataFrame(meanoutput)
 dependencydf = pd.DataFrame(dependencylist)
 
 dependencydf.to_csv('csvs/Dependency_Year_'+str(year)+'.csv',index=False)
+pairaccuracydf.to_csv('csvs/PC_pairs.csv',index=False)
+outputdf.to_csv('csvs/PC_outputdf.csv',index=False)
+
+# condense outputdf
+outputcond = []
+outputplot = []
+for subject in Contdict[year].keys():
+	tmp = outputdf[outputdf['Subject']==subject]
+	d_ = {'Subject': subject,
+		'Delay':tmp['Delay'].iloc[0],
+		'Age': tmp['Age'].iloc[0]}
+	d = {}
+	for col in ['Dependency','Data','Independent Model','Dependent Model','Accuracy']:
+		d[col] = tmp[col].mean()
+		d2 = {'Model-type':col,'Dependency':d[col]}
+		outputplot.append(dict(d_, **d2))
+	outputcond.append(dict(d_, **d))
+outputconddf = pd.DataFrame(outputcond)
+outputplotdf = pd.DataFrame(outputplot)
+outputconddf.to_csv('csvs/PC_outputconddf.csv',index=False)
+outputplotdf.to_csv('csvs/PC_outputplotdf.csv',index=False)
 
 # exclude all subjects with over 95% accuracy:
 dependencydf = dependencydf[dependencydf['Accuracy']<0.95]
