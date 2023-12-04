@@ -11,10 +11,10 @@ from partial_regression import partial_regression
 year = 1
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
-PSdf = pd.read_csv('PS_Year_'+str(year)+'.csv')
-PScatdf = pd.read_csv('PS_cat_Year_'+str(year)+'.csv')
-Dependencydf = pd.read_csv('Dependency_Year_'+str(year)+'.csv')
-datadf = pd.read_csv('datadf.csv')
+PSdf = pd.read_csv('csvs/PS_Year_'+str(year)+'.csv')
+PScatdf = pd.read_csv('csvs/PS_cat_Year_'+str(year)+'.csv')
+Dependencydf = pd.read_csv('csvs/Dependency_Year_'+str(year)+'.csv')
+datadf = pd.read_csv('csvs/datadf.csv')
 datadf = datadf[datadf['Year'] == year]
 
 subj = datadf['Subject'].unique()

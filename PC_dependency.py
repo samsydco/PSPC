@@ -142,27 +142,7 @@ dependencydf['Age'] = dependencydf['Age'].map(lambda age: numbers_to_words(age))
 order = ["Four-Year-Olds","Five-Year-Olds","Six-Year-Olds","Seven-Year-Olds"]
 
 
-fig, ax = plt.subplots(figsize=(7, 6))
 
-sns.boxplot(data=meanoutputdf, x="Age", y="Proportion of Joint Retrieval", hue="Data Type", palette="vlag",order=order, showfliers = False)
-sns.stripplot(data=meanoutputdf, x="Age", y="Proportion of Joint Retrieval", hue="Data Type", dodge=True,color=".3",order=order)
-handles, labels = ax.get_legend_handles_labels()
-l = plt.legend(handles[0:2], labels[0:2], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-#fig.savefig(figurepath+'proportion of joint retrieval.png', bbox_inches='tight', dpi=100)
-
-sns.set()
-fig, ax = plt.subplots(figsize=(7, 6))
-
-sns.boxplot(data=dependencydf, x="Age", y="Dependency", palette="vlag",order=order, showfliers = False)
-sns.stripplot(data=dependencydf, x="Age", y="Dependency", color=".3",order=order,jitter=False)
-delaydf = dependencydf[dependencydf.Delay]
-for subj in delaydf.Subject:
-	tmp = delaydf[delaydf.Subject==subj]
-	age = tmp.Age.iloc[0]
-	i = [i for i,v in enumerate(order) if v==age][0]
-	v = ax.collections[i].get_offsets().data[0][0]
-	ax.scatter(v,tmp.Dependency.iloc[0],marker='*',color='r',alpha=0.75, s=600,zorder=3)
-fig.savefig(figurepath+'dependency.png', bbox_inches='tight', dpi=100)
 
 
 g = sns.lmplot(data=dependencydf, x="Accuracy", y="Dependency")
@@ -188,7 +168,7 @@ for i,pair in enumerate(PCcols):
 	accvals = tempdf['Accuracy']
 	ttest = stats.ttest_1samp(accvals, popmean=0)
 	pairacclist.append({'Pair':pairstring,'N':len(tempdf),'df':len(tempdf)-1,'95% CI':sms.DescrStatsW(accvals).tconfint_mean(),'t-stat':ttest[0], 'p-value':ttest[1]})
-	sns.boxplot(data=tempdf, x="Age", y="Accuracy", palette="vlag",order=ordertmp, showfliers = False)
+	sns.boxplot(data=tempdf, x="Age", y="Accuracy", hue='Age',palette="vlag",order=ordertmp, showfliers = False,legend=False)
 	sns.stripplot(data=tempdf, x="Age", y="Accuracy", dodge=True,color=".3",order=ordertmp,s=10,jitter=False)
 	delaydf = tempdf[tempdf.Delay]
 	for subj in delaydf.Subject:
