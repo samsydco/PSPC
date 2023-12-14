@@ -29,9 +29,10 @@ for subject,tmp in tqdm.tqdm(Contdict[year].items()):
 	PStmp = tmp[PScols].to_numpy()
 	tmpdf = datadf[datadf['Subject']==subject]
 	age = tmpdf['Age'].values[0]
+	sex = tmpdf['Gender'].iloc[0]
 	delay=tmpdf['Delay'].iloc[0]
 	nitems = np.count_nonzero(~np.isnan(PStmp.astype(float))) # PStmp.size (if did both blocks)
-	d_ = {'Subject': subject,'Delay':delay,'Age':age}
+	d_ = {'Subject': subject,'Delay':delay,'Age':age,'Sex':sex}
 	d = d_.copy()
 	for col in PScols:
 		d[col+' target selection rate'] = np.count_nonzero(tmp[col] == 1) / (nitems/3)
