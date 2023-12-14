@@ -23,12 +23,12 @@ def dependency(res,pair,guess=1,c=4):
 	dep = np.zeros((3))
 	# calculate dependency for data
 	res2 = res[pair]
-	dep[0]      = sum(res2.sum(axis=1)==2)/len(res2) # calculate dependency for data
+	dep[0]      = sum(res2.sum(axis=1)!=1)/len(res2) # calculate dependency for data
 
 	# calculate dependency for independent model
 
 	acc         = res2.mean() # calculate accuracy for each retrieval type
-	dep[1]      = acc[0]*acc[1] # calculate dependenct for independent model
+	dep[1]      = (acc[0]*acc[1])+((1-acc[0])*(1-acc[1])) # calculate dependency for independent model
 
 	# calculate dependency for dependent model
 
