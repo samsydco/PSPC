@@ -29,71 +29,72 @@ output = [] # data, and independent model are seperate, seperate data for all pa
 meanoutput = [] # average across pairs for data and independent model
 dependencylist = [] # dependency values per subject
 for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
-	# PILOT4 only completed Day 1:
-	#if np.isnan(np.sum(np.array(res_tmp)[9:,6:])):
-	#	res_tmp = res_tmp.iloc[:9]
-	tmp = datadf[datadf['Subject']==subject]
-	dep_all = np.nan*np.zeros((len(pair_array),3))
-	age = tmp['Age'].values[0]
-	accuracy = res_tmp[PCcols].stack().mean()
-	delay = tmp['Delay'].values[0]
-	for pair in PCcols:
-		pairaccuracy.append(
-		{
-			'Subject': subject,
-			'Delay':delay,
-			'Age':age,
-			'Pair': ABC[pair[0]]+'->'+ABC[pair[1].upper()],
-			'Cue': ABC[pair[0]],
-			'To-be-retrieved': ABC[pair[1].upper()],
-			'Accuracy': res_tmp[pair].mean() 
-		})
-	for i,pair in enumerate(pair_array):
-		res = res_tmp[PCcols] # no idea why this needs to be in loop
-		dep = dependency (res, pair)
-		if pair[0][0] == pair[1][0]:
-			cue = pair[0][0]
-		elif pair[0][1] == pair[1][1]:
-			cue = pair[0][1].upper()
-		output.append(
-		{
-			'Subject': subject,
-			'Delay':delay,
-			'Age':age,
-			'Pair': pair[0]+' '+pair[1],
-			'Cue':cue,
-			'Dependency':dep[0] - dep[1],
-			'Data': dep[0],
-			'Independent Model': dep[1],
-			'Dependent Model': dep[2],
-			'Accuracy': res_tmp[pair].stack().mean() 
-		})
-		dep_all[i]=dep
-	depmean = np.nanmean(dep_all,axis=0)
-	meanoutput.append(
-		{
-			'Subject': subject,
-			'Delay':delay,
-			'Data Type':'Data',
-			'Proportion of Joint Retrieval': depmean[0],
-			'Age': age
-		})
-	meanoutput.append(
-		{
-			'Subject': subject,
-			'Delay':delay,
-			'Data Type':'Independent Model',
-			'Proportion of Joint Retrieval': depmean[1],
-			'Age': age
-		})
-	dependencylist.append(
-		{
-			'Subject': subject,
-			'Delay':delay,
-			'Dependency':depmean[0] - depmean[1],
-			'Age': age,
-			'Accuracy':accuracy
-		})
+	if np.count_nonzero(~np.isnan(res_tmp[PCcols].astype(float))) < 108:
+		print(subject+' Did not complete both blocks of experiment')
+	else:
+		tmp = datadf[datadf['Subject']==subject]
+		dep_all = np.nan*np.zeros((len(pair_array),3))
+		age = tmp['Age'].values[0]
+		accuracy = res_tmp[PCcols].stack().mean()
+		delay = tmp['Delay'].values[0]
+		for pair in PCcols:
+			pairaccuracy.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Age':age,
+				'Pair': ABC[pair[0]]+'->'+ABC[pair[1].upper()],
+				'Cue': ABC[pair[0]],
+				'To-be-retrieved': ABC[pair[1].upper()],
+				'Accuracy': res_tmp[pair].mean() 
+			})
+		for i,pair in enumerate(pair_array):
+			res = res_tmp[PCcols] # no idea why this needs to be in loop
+			nitems = np.count_nonzero(~np.isnan(res.astype(float))) # should be 108 (if did both blocks)
+			dep = dependency (res, pair)
+			if pair[0][0] == pair[1][0]:
+				cue = pair[0][0]
+			elif pair[0][1] == pair[1][1]:
+				cue = pair[0][1].upper()
+			output.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Age':age,
+				'Pair': pair[0]+' '+pair[1],
+				'Cue':cue,
+				'Dependency':dep[0] - dep[1],
+				'Data': dep[0],
+				'Independent Model': dep[1],
+				'Dependent Model': dep[2],
+				'Accuracy': res_tmp[pair].stack().mean() 
+			})
+			dep_all[i]=dep
+		depmean = np.nanmean(dep_all,axis=0)
+		meanoutput.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Data Type':'Data',
+				'Proportion of Joint Retrieval': depmean[0],
+				'Age': age
+			})
+		meanoutput.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Data Type':'Independent Model',
+				'Proportion of Joint Retrieval': depmean[1],
+				'Age': age
+			})
+		dependencylist.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Dependency':depmean[0] - depmean[1],
+				'Age': age,
+				'Accuracy':accuracy
+			})
 
 
 		
@@ -111,15 +112,16 @@ outputcond = []
 outputplot = []
 for subject in Contdict[year].keys():
 	tmp = outputdf[outputdf['Subject']==subject]
-	d_ = {'Subject': subject,
-		'Delay':tmp['Delay'].iloc[0],
-		'Age': tmp['Age'].iloc[0]}
-	d = {}
-	for col in ['Dependency','Data','Independent Model','Dependent Model','Accuracy']:
-		d[col] = tmp[col].mean()
-		d2 = {'Model-type':col,'Dependency':d[col]}
-		outputplot.append(dict(d_, **d2))
-	outputcond.append(dict(d_, **d))
+	if len(tmp) > 0:
+		d_ = {'Subject': subject,
+			'Delay':tmp['Delay'].iloc[0],
+			'Age': tmp['Age'].iloc[0]}
+		d = {}
+		for col in ['Dependency','Data','Independent Model','Dependent Model','Accuracy']:
+			d[col] = tmp[col].mean()
+			d2 = {'Model-type':col,'Dependency':d[col]}
+			outputplot.append(dict(d_, **d2))
+		outputcond.append(dict(d_, **d))
 outputconddf = pd.DataFrame(outputcond)
 outputplotdf = pd.DataFrame(outputplot)
 outputconddf.to_csv('csvs/PC_outputconddf.csv',index=False)
