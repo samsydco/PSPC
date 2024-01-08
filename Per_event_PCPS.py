@@ -74,7 +74,7 @@ df_ = df[(df['N PC correct'] != 0) & (df['N PC correct'] != 6)]
 dependencydf = pd.read_csv('csvs/Dependency_Year_1.csv')
 excludedf = dependencydf[(dependencydf['Accuracy']<0.3) | (dependencydf['Accuracy']>0.95)]
 exclude_subjs = excludedf['Subject']
-df_ex = df[~df.Subject.isin(exclude_subjs)]
+df_ex = df_[~df_.Subject.isin(exclude_subjs)]
 
 
 import statsmodels.api as sm
@@ -83,18 +83,18 @@ import warnings
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 # Suppress convergence warnings
 warnings.simplefilter('ignore', ConvergenceWarning)
-for kd,d in {'All participants':df,'Removing subjects with perfect dependency':df_}.items():
-	for delay in [True,False]:
+for kd,d in {'All participants':df,'Removing events with perfect dependency':df_,'Removing events and subjects with perfect dependency':df_ex}.items():
+	for delay in [True]:#,False]:
 		tmp = d[d['Delay']==delay]
 		# For comparison in R:
 		tmp.to_csv('csvs/'+kd+' Delay = '+str(delay)+'.csv',index=False)
-		for k in PSkey.values():
+		for k in ['Target']:#PSkey.values():
 			# Following this advice: 
 			# https://stackoverflow.com/questions/50052421/mixed-models-with-two-random-effects-statsmodels?rq=3
 			vcf = {'Event': '0 + C(Event)', 'Subject': '0 + C(Subject)'}
 			model2 = sm.MixedLM.from_formula("Dependency ~ "+k, groups="group", vc_formula=vcf, re_formula="0",data=tmp)
 			result2 = model2.fit(method="cg")
-			if result2.pvalues[k] < 0.05:
+			if result2.pvalues[k] != 0.00:
 				print('Model for '+k)
 				print('Delay = '+str(delay))
 				print(kd)
@@ -108,41 +108,7 @@ for kd,d in {'All participants':df,'Removing subjects with perfect dependency':d
 				print('With only Subject (statsmodels implementation):')
 				print(result1.summary())
 				
-				
-				# Extract coefficients and confidence intervals
-				coefs = result2.params
-				conf_int = result2.conf_int()
-				conf_int["coef"] = coefs
 
-				# Plot
-				plt.figure(figsize=(8, 4))
-				sns.pointplot(x="coef", y=conf_int.index, data=conf_int, linestyle='none', capsize=0.2)
-				plt.axvline(x=0, color='grey', linestyle='--')
-				plt.title("Coefficients and Confidence Intervals")
-				plt.show()
-				
-				
-				
-				# First illustrate basic pyplot interface, using defaults where possible.
-				plt.figure()
-				plt.errorbar(['Intercept','Target','Subject'], coefs, yerr=[conf_int[0], conf_int[1]],fmt='o')
-				plt.title("Simplest errorbars, 0.2 in x, 0.4 in y")
-
-				# Now switch to a more OO interface to exercise more features.
-				fig, axs = plt.subplots(nrows=2, ncols=2, sharex=True)
-				ax = axs[0,0]
-				ax.errorbar(x, y, yerr=yerr, fmt='o')
-				ax.set_title('Vert. symmetric')
-
-				
-			# Using Pymer4 implementation
-			#modelpymer = Lmer("Dependency ~ "+k+" + (1|Subject) + (1|Event)", data=tmp)#, family='binomial')
-			#print('Model for '+k)
-			#print('Delay = '+str(delay))
-			#print(kd)
-			#print('With both Event and Subject (pymber4 implementation):')
-			#print(modelpymer.fit())
-			#print(modelpymer.coefs)
 			
 			
 from statsmodels.formula.api import ols
@@ -156,10 +122,7 @@ sns.set_theme(style="whitegrid")
 
 # Draw a scatter plot while assigning point colors and sizes to different
 # variables in the dataset
-
-sns.lmplot(data=df[df['Delay']==delay], x="Target", y="Dependency", hue="Subject",legend=False)
-sns.regplot(data=df[df['Delay']==delay], x="Target", y="Dependency",scatter=False)
-
+tmp=df_ex
 f, ax = plt.subplots(figsize=(6.5, 6.5))
 sns.despine(f, left=True, bottom=True)
 sns.scatterplot(x="Target", y="Dependency",
@@ -167,11 +130,12 @@ sns.scatterplot(x="Target", y="Dependency",
                 hue="Subject", size="Event",#sizes=(1, 18), 
 				palette="ch:r=-.2,d=.3_r",
                 legend=False,#linewidth=0,
-                data=df[df['Delay']==delay], ax=ax, alpha=0.5)
-sns.regplot(data=df[df['Delay']==delay], x="Target", y="Dependency",ax=ax,scatter=False)
+                data=tmp[tmp['Delay']==delay], ax=ax, alpha=0.5)
+sns.regplot(data=tmp[tmp['Delay']==delay], x="Target", y="Dependency",ax=ax,scatter=False)
 ax.set_xlabel('Proportion of Target selected per event')
 ax.set_ylabel('Event-level dependency')
 	
+# Distribution plots:
 bins=10
 f,ax = plt.subplots(1,2)
 for i,delay in enumerate([True,False]):
@@ -187,21 +151,18 @@ def per_event_histogram(df):
 	f,ax = plt.subplots(1,2, figsize=(10, 5))
 	for i,delay in enumerate([True,False]):
 		# Distrubiton of dependency:
-		# Plot the orbital period with horizontal boxes
 		g = sns.boxplot(
 			df[df['Delay']==delay], x="Event", y="Dependency", hue="Event",whis=[0, 100],
 			width=.6,palette="vlag",ax=ax[i],legend=False
 		)
-
 		# Add in points to show each observation
 		sns.stripplot(df[df['Delay']==delay], x="Event", y="Dependency", size=3, color=".3",ax=ax[i])
-
 		ax[i].set_title('Delay = '+str(delay))
 		ax[i].set_ylim([-0.85,0.55])
 		g.set(xticklabels=[])
 	g.set(yticklabels=[])
 	g.set(ylabel=None)
 	
-for k,v in {'All events':df,'Excluding events with perfect dependency':df_}.items():
+for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
 	print(k)
 	per_event_histogram(v)
