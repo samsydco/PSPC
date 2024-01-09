@@ -4,3 +4,6 @@ __pycache__
 *.h5
 *csv
 csvs
+*R
+.R*
+old_code
