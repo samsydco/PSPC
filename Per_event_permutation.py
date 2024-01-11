@@ -52,6 +52,9 @@ for delay in [True,False]:
 			model1 = smf.mixedlm("Dependency ~ Target", d, groups=d["Subject"]) # Random Intercept
 			result1 = model1.fit()
 			zvals[delay][k]['Smaller'].append(result1.tvalues["Target"])
+			if i==0:
+				print(delay,k)
+				print(result1.summary())
 
 dd.io.save('csvs/Permuted_events.h5',zvals)
 zvals = dd.io.load('csvs/Permuted_events.h5')
