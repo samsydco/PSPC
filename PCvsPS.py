@@ -9,7 +9,7 @@ import statsmodels.formula.api as sm2
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
-sns.set_theme(style="white",font_scale=1.5)
+sns.set_theme(style="white",font_scale=1.5, palette=['#6e90bf',  '#d9a6a4', '#c26f6d'])
 
 PSdf = pd.read_csv('csvs/PS_cat_Year_1.csv')
 PCdf = pd.read_csv('csvs/Dependency_Year_1.csv')
@@ -20,48 +20,83 @@ if len(missingdf)==1 and missingdf['Subject'].iloc[0]=='MDEM127':
 	'And therefore has incomplete PC data')
 	combodf = combodf.drop(combodf[combodf['Subject']=='MDEM127'].index)
 
-# High/low performing PC subjects:
-excludedf = PCdf[(PCdf['Accuracy']<0.3) | (PCdf['Accuracy']>0.95)]
+# High performing PC subjects:
+excludedf = PCdf[PCdf['Accuracy']>0.95]
 exclude_subjs = excludedf['Subject']
 
-combodf.rename(columns={'Target': 'Target Selection Rate', 'Lure': 'Lure Selection Rate', 'Foil': 'Foil Selection Rate', 'Target': 'PS Target Selection Rate'}, inplace=True)
+pslabeldict = {'Target': 'Target (Correct) Selection Rate', 'Lure': 'Lure (Similar) Selection Rate', 'Foil': 'Foil Selection Rate'}
+pclabeldict = {'Accuracy':'PC Accuracy','Dependency':'Dependency'}
+delaydict = {False:'Immediate',True:'Delayed'}
+#combodf.rename(columns=labeldict, inplace=True)
 
-for delay in [True,False]:
-	for exclude in [True,False]:
-		for ps in ['Target']:#ure','Foil']:
-			for pc in ['Accuracy','Dependency']:
+statlist = []
+for exclude in [True]:#,False]:
+	for pc in ['Accuracy','Dependency']:
+		f1, ax1 = plt.subplots(1,3,figsize=(15, 5))
+		f2, ax2 = plt.subplots(1,3,figsize=(18, 6))
+		for delay in [False,True]:
+			for i,ps in enumerate(['Target','Lure','Foil']):
 				tmp = combodf[combodf['Delay']==delay]
+				#ps = labeldict[ps_]
 				if exclude == True: tmp = tmp[~tmp.Subject.isin(exclude_subjs)]
 				print('Delay = '+str(delay))
-				print('Removing good/bad subjs = '+str(exclude))
+				print('Removing good subjs = '+str(exclude))
 				print(ps+' x '+pc)
 				print(len(tmp))
 				res = stats.pearsonr(tmp[ps],tmp[pc])
 				result = sm2.ols(formula=pc+'~Age +'+ps,data=tmp).fit()
 				print(res)
 				print(result.summary()) 
-				tmpplt = tmp.rename(columns={ps: ps+' Selection Rate'})
-				tmpplt.rename(columns={pc: 'PC '+pc}, inplace=True)
-				fig, ax = plt.subplots(1, figsize=(5, 5))
-				sns.regplot(data=tmpplt,x=ps+' Selection Rate', y='PC '+pc,ax=ax)
-				ax.set_title('Delay = '+str(delay)+'\n'+'Removing good/bad subjs = '+str(exclude))
-				ax.text(0.05, 0.8, f'r = {res[0]:.2f}\np = {res[1]:.3f}', transform=ax.transAxes)
+				tmpplt = tmp.rename(columns={ps: pslabeldict[ps]})
+				tmpplt.rename(columns={pc: pclabeldict[pc]}, inplace=True)
+				#fig, ax = plt.subplots(1, figsize=(5, 5))
+				sns.regplot(data=tmpplt,x=pslabeldict[ps], y=pclabeldict[pc],ax=ax1[i],label=delaydict[delay])
+				ax1[i].set_title('Delay = '+str(delay)+'\n'+'Removing good subjs = '+str(exclude))
+				statlist.append({'Controlling for Age':False,
+								'Exclude':exclude,
+								'PC':pc,
+								'Delay':delay,
+								'PS':ps,
+								'r':res[0],
+								'p':res[1]})
+				#ax1[i].text(0.05, 0.8, f'r = {res[0]:.2f}\np = {res[1]:.3f}', transform=ax1[i].transAxes)
 				
 				# Partial regression plots controlling for age:
 				PCreg = LinearRegression().fit(tmp[['Age']], tmp[pc])
 				PSreg = LinearRegression().fit(tmp[['Age']], tmp[ps])
 				PCresiduals = tmp[pc] - PCreg.predict(tmp[['Age']])
 				PSresiduals = tmp[ps] - PSreg.predict(tmp[['Age']])
-				residualsdf = pd.DataFrame({ps+' Selection Rate': PSresiduals, 'PC '+pc: PCresiduals})
+				residualsdf = pd.DataFrame({pslabeldict[ps]: PSresiduals, 
+											pclabeldict[pc]: PCresiduals})
 				# Partial regression plot
-				f, ax = plt.subplots(figsize=(6, 6))
-				g1 = sns.regplot(data=residualsdf,x=ps+' Selection Rate', y='PC '+pc ,ax=ax)
-				ax.set_title('Delay = '+str(delay)+'\n'+'Removing good/bad subjs = '+str(exclude)+'\n Controlling for Age')
+				#f, ax = plt.subplots(figsize=(6, 6))
+				sns.regplot(data=residualsdf,x=pslabeldict[ps], y=pclabeldict[pc] ,ax=ax2[i],label=delaydict[delay])
+				ax2[i].set_title('Delay = '+str(delay)+'\n'+'Removing good subjs = '+str(exclude)+'\n Controlling for Age')
 				# r-value from t-value:
 				t_value = result.tvalues[ps]
 				df = result.df_resid
 				r_value = np.sqrt(np.square(t_value) / (np.square(t_value) + df))
-				ax.text(0.05, 0.8, f'r = {r_value:.2f}\np = {result.pvalues[ps]:.3f}', transform=ax.transAxes)
+				#ax2[i].text(0.05, 0.8, f'r = {r_value:.2f}\np = {result.pvalues[ps]:.3f}', transform=ax2[i].transAxes)
+				statlist.append({'Controlling for Age':True,
+								'Exclude':exclude,
+								'PC':pc,
+								'Delay':delay,
+								'PS':ps,
+								'r':r_value,
+								'p':result.pvalues[ps]})
+				if i>0:
+					ax1[i].set(yticklabels=[])
+					ax2[i].set(yticklabels=[])
+					ax1[i].set(ylabel=None)
+					ax2[i].set(ylabel=None)
+		handles1, labels1 = ax1[i].get_legend_handles_labels()
+		l1 = f1.legend(handles1, labels1, bbox_to_anchor=(1.12, .9), borderaxespad=0.)
+		handles2, labels2 = ax2[i].get_legend_handles_labels()
+		l2 = f2.legend(handles2, labels2, bbox_to_anchor=(1.1, .9), borderaxespad=0.)
+		f1.tight_layout()
+		f2.tight_layout()
+statdf=pd.DataFrame(statlist)
+display(statdf)
 				
 				
 
