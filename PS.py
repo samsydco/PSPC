@@ -41,6 +41,8 @@ for subject,tmp in tqdm.tqdm(Contdict[year].items()):
 		d2['Selection'] = PSkey[value]
 		d2['Proportion Selected']  = np.count_nonzero(PStmp == value) / nitems
 		d[PSkey[value]] = d2['Proportion Selected']
+		d[PSkey[value]+' first'] = np.count_nonzero(PStmp[:9] == value) / 9
+		d[PSkey[value]+' second'] = np.count_nonzero(PStmp[9:] == value) / 9
 		output.append(d2)
 	percatoutput.append(d)
 	
