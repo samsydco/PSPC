@@ -36,6 +36,8 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 		dep_all = np.nan*np.zeros((len(pair_array),3))
 		age = tmp['Age'].values[0]
 		accuracy = res_tmp[PCcols].stack().mean()
+		accuracyfirst = res_tmp[PCcols][:9].stack().mean()
+		accuracysecond =  res_tmp[PCcols][9:].stack().mean()
 		delay = tmp['Delay'].values[0]
 		for pair in PCcols:
 			pairaccuracy.append(
