@@ -72,7 +72,7 @@ df["group"] = 1
 df_ = df[(df['N PC correct'] != 0) & (df['N PC correct'] != 6)]
 # OR Exclude perfectly dependent subjects:
 dependencydf = pd.read_csv('csvs/Dependency_Year_1.csv')
-excludedf = dependencydf[(dependencydf['Accuracy']<0.3) | (dependencydf['Accuracy']>0.95)]
+excludedf = dependencydf[dependencydf['Accuracy']>0.95]
 exclude_subjs = excludedf['Subject']
 df_ex = df_[~df_.Subject.isin(exclude_subjs)]
 
@@ -84,29 +84,24 @@ from statsmodels.tools.sm_exceptions import ConvergenceWarning
 # Suppress convergence warnings
 warnings.simplefilter('ignore', ConvergenceWarning)
 for kd,d in {'All participants':df,'Removing events with perfect dependency':df_,'Removing events and subjects with perfect dependency':df_ex}.items():
-	for delay in [True]:#,False]:
-		tmp = d[d['Delay']==delay]
-		# For comparison in R:
-		tmp.to_csv('csvs/'+kd+' Delay = '+str(delay)+'.csv',index=False)
-		for k in ['Target']:#PSkey.values():
-			# Following this advice: 
-			# https://stackoverflow.com/questions/50052421/mixed-models-with-two-random-effects-statsmodels?rq=3
-			vcf = {'Event': '0 + C(Event)', 'Subject': '0 + C(Subject)'}
-			model2 = sm.MixedLM.from_formula("Dependency ~ "+k, groups="group", vc_formula=vcf, re_formula="0",data=tmp)
-			result2 = model2.fit(method="cg")
-			if result2.pvalues[k] != 0.00:
-				print('Model for '+k)
-				print('Delay = '+str(delay))
-				print(kd)
-				print('With both Event and Subject (statsmodels implementation):')
-				print(result2.summary())
-				model1 = smf.mixedlm("Dependency ~ "+k, tmp, groups=tmp["Subject"]) # Random Intercept
-				result1 = model1.fit()
-				print('Model for '+k)
-				print('Delay = '+str(delay))
-				print(kd)
-				print('With only Subject (statsmodels implementation):')
-				print(result1.summary())
+	tmp = d
+	for k in ['Target','Lure','Foil']:#PSkey.values():
+		# Following this advice: 
+		# https://stackoverflow.com/questions/50052421/mixed-models-with-two-random-effects-statsmodels?rq=3
+		vcf = {'Event': '0 + C(Event)', 'Subject': '0 + C(Subject)'}
+		model2 = sm.MixedLM.from_formula("Dependency ~ "+k+" + Delay", groups="group", vc_formula=vcf, re_formula="0",data=tmp)
+		result2 = model2.fit(method="cg")
+		if result2.pvalues[k] != 0.00:
+			print('Model for '+k)
+			print(kd)
+			print('With both Event and Subject (statsmodels implementation):')
+			print(result2.summary())
+			model1 = smf.mixedlm("Dependency ~ "+k+" + Delay", tmp, groups=tmp["Subject"]) # Random Intercept
+			result1 = model1.fit()
+			print('Model for '+k)
+			print(kd)
+			print('With only Subject (statsmodels implementation):')
+			print(result1.summary())
 				
 
 			
@@ -147,7 +142,8 @@ for i,delay in enumerate([True,False]):
 ax[0].set_ylabel("Count")
 ax[1].legend(bbox_to_anchor=(1.1, 1.05))
 	                                          
-def per_event_histogram(df):		
+def per_event_histogram(df):	
+	delaylabs = ['Immediate','Delayed']
 	f,ax = plt.subplots(1,2, figsize=(10, 5))
 	for i,delay in enumerate([True,False]):
 		# Distrubiton of dependency:
@@ -157,7 +153,7 @@ def per_event_histogram(df):
 		)
 		# Add in points to show each observation
 		sns.stripplot(df[df['Delay']==delay], x="Event", y="Dependency", size=3, color=".3",ax=ax[i])
-		ax[i].set_title('Delay = '+str(delay))
+		ax[i].set_title(delaylabs[i])
 		ax[i].set_ylim([-0.85,0.55])
 		g.set(xticklabels=[])
 	g.set(yticklabels=[])
