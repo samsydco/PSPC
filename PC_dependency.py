@@ -34,6 +34,8 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 	else:
 		tmp = datadf[datadf['Subject']==subject]
 		dep_all = np.nan*np.zeros((len(pair_array),3))
+		dep_all1 = np.nan*np.zeros((len(pair_array),3))
+		dep_all2 = np.nan*np.zeros((len(pair_array),3))
 		age = tmp['Age'].values[0]
 		accuracy = res_tmp[PCcols].stack().mean()
 		accuracyfirst = res_tmp[PCcols][:9].stack().mean()
@@ -54,6 +56,10 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			res = res_tmp[PCcols] # no idea why this needs to be in loop
 			nitems = np.count_nonzero(~np.isnan(res.astype(float))) # should be 108 (if did both blocks)
 			dep = dependency (res, pair)
+			resfirst = res_tmp[PCcols][:9].reset_index(drop=True)
+			ressecond = res_tmp[PCcols][9:].reset_index(drop=True)
+			depfirst = dependency (resfirst, pair)
+			depsecond = dependency (ressecond, pair)
 			if pair[0][0] == pair[1][0]:
 				cue = pair[0][0]
 			elif pair[0][1] == pair[1][1]:
@@ -72,7 +78,11 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 				'Accuracy': res_tmp[pair].stack().mean() 
 			})
 			dep_all[i]=dep
+			dep_all1[i]=depfirst
+			dep_all2[i]=depsecond
 		depmean = np.nanmean(dep_all,axis=0)
+		depmean1 = np.nanmean(dep_all1,axis=0)
+		depmean2 = np.nanmean(dep_all2,axis=0)
 		meanoutput.append(
 			{
 				'Subject': subject,
@@ -93,9 +103,14 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			{
 				'Subject': subject,
 				'Delay':delay,
+				'Same Day':tmp['Same Day'].iloc[0],
 				'Dependency':depmean[0] - depmean[1],
 				'Age': age,
-				'Accuracy':accuracy
+				'Accuracy':accuracy,
+				'Accuracy First':accuracyfirst,
+				'Accuracy Second':accuracysecond,
+				'Dependency First':depmean1[0] - depmean1[1],
+				'Dependency Second':depmean2[0] - depmean2[1],
 			})
 
 
