@@ -115,6 +115,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 sns.set_theme(style="whitegrid")
 
+# Aidan's question: Does dependnecy averaged across all 18 events equal dependency when calculated the "normal" way?
+
+
 # Draw a scatter plot while assigning point colors and sizes to different
 # variables in the dataset
 tmp=df_ex
@@ -145,7 +148,7 @@ ax[1].legend(bbox_to_anchor=(1.1, 1.05))
 def per_event_histogram(df):	
 	delaylabs = ['Immediate','Delayed']
 	f,ax = plt.subplots(1,2, figsize=(10, 5))
-	for i,delay in enumerate([True,False]):
+	for i,delay in enumerate([False,True]):
 		# Distrubiton of dependency:
 		g = sns.boxplot(
 			df[df['Delay']==delay], x="Event", y="Dependency", hue="Event",whis=[0, 100],
@@ -162,3 +165,36 @@ def per_event_histogram(df):
 for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
 	print(k)
 	per_event_histogram(v)
+	
+# Per subject histogram:
+def new_col(row):
+	subj = row['Subject']
+	return dependencydf[dependencydf['Subject']==row['Subject']]['Accuracy'].iloc[0]
+
+delaylabs = ['Immediate','Delayed']
+def per_subject_histogram(df):
+	f,ax = plt.subplots(2,1, figsize=(22, 7))
+	for i,delay in enumerate([False,True]):
+		tmp = df[df['Delay']==delay].copy()
+		tmp["Accuracy"] = df.apply(new_col, axis=1)
+		tmp = tmp.sort_values(by=['Accuracy','Subject']).reset_index(drop=True)
+		tmp['Accuracy'] = tmp['Accuracy'].round(2)
+		# Distrubiton of dependency:
+		g = sns.boxplot(
+			tmp, x="Subject", y="Dependency", hue="Subject",whis=[0, 100],
+			width=.6,palette="vlag",ax=ax[i],legend=False
+		)
+		# Add in points to show each observation
+		sns.stripplot(tmp, x="Subject", y="Dependency", size=3, color=".3",ax=ax[i])
+		ax[i].set_title(delaylabs[i])
+		ax[i].set_ylim([-0.85,0.55])
+		accvals = np.round(np.sort(dependencydf[dependencydf['Subject'].isin(list(tmp['Subject']))]['Accuracy']),2)
+		g.set_xticks(ax[i].get_xticks())
+		g.set_xticklabels(list(accvals), rotation=45)
+		g.set(xlabel='Accuracy')
+	plt.tight_layout()
+
+sns.set(style="whitegrid", font_scale=1.5)
+for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
+	print(k)
+	per_subject_histogram(v)
