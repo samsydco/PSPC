@@ -39,6 +39,7 @@ df = df.rename({'demo_age': 'Age','participant_id':'MDEM ID'}, axis='columns')
 df_all = partlog.merge(df.drop_duplicates(), on=['MDEM ID'],how='left', indicator=True)
 missing_demo = df_all[df_all['_merge'] == 'left_only']
 sess_1_subjs = df_all[df_all['Completed S1 & S2?'] != 'X']
+sess_1_subjs = sess_1_subjs[sess_1_subjs['Delay'] != False] # This only matters for Subjs in delay condition! 
 print(str(len(sess_1_subjs))+' subjects did not return for the second session where PSPC memory was tested.')
 df_all = df_all[df_all['Completed S1 & S2?'] == 'X']
 df_all = df_all.drop(df_all.columns[-1],axis=1)
