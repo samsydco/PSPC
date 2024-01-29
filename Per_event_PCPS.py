@@ -81,11 +81,15 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import warnings
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
+from scipy import stats
 # Suppress convergence warnings
 warnings.simplefilter('ignore', ConvergenceWarning)
 for kd,d in {'All participants':df,'Removing events with perfect dependency':df_,'Removing events and subjects with perfect dependency':df_ex}.items():
 	tmp = d
-	for k in ['Target','Lure','Foil']:#PSkey.values():
+	for k in ['Target','Lure','Foil','N PC correct']:#PSkey.values():
+		if k == 'N PC correct':
+			tmp = tmp.rename(columns={'N PC correct': 'N_PC_correct'})
+			k = 'N_PC_correct'
 		# Following this advice: 
 		# https://stackoverflow.com/questions/50052421/mixed-models-with-two-random-effects-statsmodels?rq=3
 		vcf = {'Event': '0 + C(Event)', 'Subject': '0 + C(Subject)'}
@@ -116,7 +120,15 @@ import matplotlib.pyplot as plt
 sns.set_theme(style="whitegrid")
 
 # Aidan's question: Does dependnecy averaged across all 18 events equal dependency when calculated the "normal" way?
-
+df = df.join(
+    df.groupby('Subject')['Dependency'].transform('mean').rename('Dependency Averaged across all events')  # Rename columns 
+)
+dftmp = df[df['Event'] == 0]
+newdf = pd.merge(dependencydf, dftmp, on="Subject")
+newdf = newdf.rename({'Dependency_x':'Dependency'},axis=1)
+stat_vals = stats.pearsonr(newdf['Dependency'],newdf['Dependency Averaged across all events'])
+f, ax = plt.subplots(figsize=(6.5, 6.5))
+sns.regplot(data=newdf, x="Dependency", y='Dependency Averaged across all events', ax=ax)
 
 # Draw a scatter plot while assigning point colors and sizes to different
 # variables in the dataset
@@ -144,35 +156,46 @@ for i,delay in enumerate([True,False]):
 	ax[i].set_xlabel('Per event Dependency')
 ax[0].set_ylabel("Count")
 ax[1].legend(bbox_to_anchor=(1.1, 1.05))
-	                                          
-def per_event_histogram(df):	
-	delaylabs = ['Immediate','Delayed']
+
+delaylabs = ['Immediate','Delayed']
+def per_event_histogram(df,column,connect_dots):	
 	f,ax = plt.subplots(1,2, figsize=(10, 5))
 	for i,delay in enumerate([False,True]):
+		tmp = df[df['Delay']==delay]
 		# Distrubiton of dependency:
 		g = sns.boxplot(
-			df[df['Delay']==delay], x="Event", y="Dependency", hue="Event",whis=[0, 100],
+			tmp, x="Event", y=column, hue="Event",whis=[0, 100],
 			width=.6,palette="vlag",ax=ax[i],legend=False
 		)
 		# Add in points to show each observation
-		sns.stripplot(df[df['Delay']==delay], x="Event", y="Dependency", size=3, color=".3",ax=ax[i])
+		if connect_dots == False:
+			sns.stripplot(tmp, x="Event", y=column, size=3, ax=ax[i],color=".3")#,hue='Subject',legend=False)#,color=".3")
+		else:
+			for event in range(18):
+				vals = tmp[tmp['Event'] == event][column]
+				ax[i].plot(event*np.ones((len(vals),1)), vals, 'o', alpha=.40, zorder=1, ms=6, mew=1)
+			for subj in tmp['Subject'].unique():
+				ax[i].plot(tmp[tmp['Subject'] == subj]['Event'], tmp[tmp['Subject'] == subj][column], color = 'grey', linewidth = 0.5, linestyle = '-', zorder=-1)
+		
+		ax[i].axhline(y=0.0, color='k', linestyle='--')
 		ax[i].set_title(delaylabs[i])
-		ax[i].set_ylim([-0.85,0.55])
+		if column=='Dependency':
+			ax[i].set_ylim([-0.85,0.55])
 		g.set(xticklabels=[])
 	g.set(yticklabels=[])
 	g.set(ylabel=None)
-	
-for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
-	print(k)
-	per_event_histogram(v)
+
+for column in ['Dependency']:#,'N PC correct','Target','Lure','Foil']:
+	for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
+		print(k,column)
+		per_event_histogram(v,column,True)
 	
 # Per subject histogram:
 def new_col(row):
 	subj = row['Subject']
 	return dependencydf[dependencydf['Subject']==row['Subject']]['Accuracy'].iloc[0]
 
-delaylabs = ['Immediate','Delayed']
-def per_subject_histogram(df):
+def per_subject_histogram(df,column):
 	f,ax = plt.subplots(2,1, figsize=(22, 7))
 	for i,delay in enumerate([False,True]):
 		tmp = df[df['Delay']==delay].copy()
@@ -181,13 +204,15 @@ def per_subject_histogram(df):
 		tmp['Accuracy'] = tmp['Accuracy'].round(2)
 		# Distrubiton of dependency:
 		g = sns.boxplot(
-			tmp, x="Subject", y="Dependency", hue="Subject",whis=[0, 100],
+			tmp, x="Subject", y=column, hue="Subject",whis=[0, 100],
 			width=.6,palette="vlag",ax=ax[i],legend=False
 		)
 		# Add in points to show each observation
-		sns.stripplot(tmp, x="Subject", y="Dependency", size=3, color=".3",ax=ax[i])
+		sns.stripplot(tmp, x="Subject", y=column, size=3, color=".3",ax=ax[i])
+		ax[i].axhline(y=0.0, color='k', linestyle='--')
 		ax[i].set_title(delaylabs[i])
-		ax[i].set_ylim([-0.85,0.55])
+		if column == 'Dependency':
+			ax[i].set_ylim([-0.85,0.55])
 		accvals = np.round(np.sort(dependencydf[dependencydf['Subject'].isin(list(tmp['Subject']))]['Accuracy']),2)
 		g.set_xticks(ax[i].get_xticks())
 		g.set_xticklabels(list(accvals), rotation=45)
@@ -195,6 +220,7 @@ def per_subject_histogram(df):
 	plt.tight_layout()
 
 sns.set(style="whitegrid", font_scale=1.5)
-for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
-	print(k)
-	per_subject_histogram(v)
+for column in ['Dependency']:#,'N PC correct','Target','Lure','Foil']:
+	for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
+		print(k,column)
+		per_subject_histogram(v,column)
