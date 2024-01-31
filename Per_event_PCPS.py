@@ -86,7 +86,7 @@ from scipy import stats
 warnings.simplefilter('ignore', ConvergenceWarning)
 for kd,d in {'All participants':df,'Removing events with perfect dependency':df_,'Removing events and subjects with perfect dependency':df_ex}.items():
 	tmp = d
-	for k in ['Target','Lure','Foil','N PC correct']:#PSkey.values():
+	for k in ['N PC correct']:# ['Target','Lure','Foil','N PC correct']:#PSkey.values():
 		if k == 'N PC correct':
 			tmp = tmp.rename(columns={'N PC correct': 'N_PC_correct'})
 			k = 'N_PC_correct'
@@ -176,19 +176,23 @@ def per_event_histogram(df,column,connect_dots):
 				ax[i].plot(event*np.ones((len(vals),1)), vals, 'o', alpha=.40, zorder=1, ms=6, mew=1)
 			for subj in tmp['Subject'].unique():
 				ax[i].plot(tmp[tmp['Subject'] == subj]['Event'], tmp[tmp['Subject'] == subj][column], color = 'grey', linewidth = 0.5, linestyle = '-', zorder=-1)
-		
-		ax[i].axhline(y=0.0, color='k', linestyle='--')
 		ax[i].set_title(delaylabs[i])
 		if column=='Dependency':
 			ax[i].set_ylim([-0.85,0.55])
+			ax[i].axhline(y=0.0, color='k', linestyle='--')
 		g.set(xticklabels=[])
 	g.set(yticklabels=[])
 	g.set(ylabel=None)
 
-for column in ['Dependency']:#,'N PC correct','Target','Lure','Foil']:
+for column in ['Dependency','N PC correct','Target','Lure','Foil']:
 	for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
 		print(k,column)
-		per_event_histogram(v,column,True)
+		per_event_histogram(v,column,False)
+		
+
+for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
+	print(k,column)
+	per_event_histogram(v,'Dependency',True)
 	
 # Per subject histogram:
 def new_col(row):
@@ -209,10 +213,10 @@ def per_subject_histogram(df,column):
 		)
 		# Add in points to show each observation
 		sns.stripplot(tmp, x="Subject", y=column, size=3, color=".3",ax=ax[i])
-		ax[i].axhline(y=0.0, color='k', linestyle='--')
 		ax[i].set_title(delaylabs[i])
 		if column == 'Dependency':
 			ax[i].set_ylim([-0.85,0.55])
+			ax[i].axhline(y=0.0, color='k', linestyle='--')
 		accvals = np.round(np.sort(dependencydf[dependencydf['Subject'].isin(list(tmp['Subject']))]['Accuracy']),2)
 		g.set_xticks(ax[i].get_xticks())
 		g.set_xticklabels(list(accvals), rotation=45)
@@ -220,7 +224,7 @@ def per_subject_histogram(df,column):
 	plt.tight_layout()
 
 sns.set(style="whitegrid", font_scale=1.5)
-for column in ['Dependency']:#,'N PC correct','Target','Lure','Foil']:
+for column in ['Dependency','N PC correct','Target','Lure','Foil']:
 	for k,v in {'All events':df,'Excluding events with perfect dependency':df_,'Excluding dependent subjects and events with perfect dependency':df_ex}.items():
 		print(k,column)
 		per_subject_histogram(v,column)
