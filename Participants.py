@@ -70,7 +70,10 @@ for d in data_tmp:
 datadf = pd.DataFrame(data)
 datadf = datadf[~datadf['MDEM ID'].str.contains("TEST")]
 
-df_all_ = df_all.merge(datadf.drop_duplicates(), on=['MDEM ID'],how='left', indicator=True)
+# removing 9 o.g. version subjects:
+datadf = datadf[datadf['Same_Day'] == True]
+
+df_all_ = df_all.merge(datadf, on=['MDEM ID'],how='left', indicator=True)
 df_all_[df_all_['_merge'] == 'left_only']
 
 missing_elliot = ['MDEM052','MDEM055','MDEM057','MDEM058']
