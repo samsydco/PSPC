@@ -12,7 +12,7 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
-year = 1
+year = 2
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('csvs/datadf.csv')
@@ -25,6 +25,7 @@ pair_array = [['Ab','Ac'],['Ba','Bc'],['Ca','Cb'],['Ba','Ca'],['Ac','Bc'],['Ab',
 ABC = {'A':'Place','B':'Animal','C':'Object'}
 
 pairaccuracy = []
+pairaccuracycol = []
 output = [] # data, and independent model are seperate, seperate data for all pairs in pair_array
 meanoutput = [] # average across pairs for data and independent model
 dependencylist = [] # dependency values per subject
@@ -41,17 +42,22 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 		accuracyfirst = res_tmp[PCcols][:9].stack().mean()
 		accuracysecond =  res_tmp[PCcols][9:].stack().mean()
 		delay = tmp['Delay'].values[0]
+		same_day = tmp['Same Day'].values[0]
+		d_ = {'Subject': subject,'Delay':delay,'Same Day':same_day}		
 		for pair in PCcols:
 			pairaccuracy.append(
 			{
 				'Subject': subject,
 				'Delay':delay,
+				'Same Day':same_day,
 				'Age':age,
 				'Pair': ABC[pair[0]]+'->'+ABC[pair[1].upper()],
 				'Cue': ABC[pair[0]],
 				'To-be-retrieved': ABC[pair[1].upper()],
 				'Accuracy': res_tmp[pair].mean() 
 			})
+			d_[ABC[pair[0]]+'->'+ABC[pair[1].upper()]+' Accuracy'] =  res_tmp[pair].mean()
+		pairaccuracycol.append(d_)
 		for i,pair in enumerate(pair_array):
 			res = res_tmp[PCcols] # no idea why this needs to be in loop
 			nitems = np.count_nonzero(~np.isnan(res.astype(float))) # should be 108 (if did both blocks)
@@ -68,6 +74,7 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			{
 				'Subject': subject,
 				'Delay':delay,
+				'Same Day':same_day,
 				'Age':age,
 				'Pair': pair[0]+' '+pair[1],
 				'Cue':cue,
@@ -87,6 +94,7 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			{
 				'Subject': subject,
 				'Delay':delay,
+				'Same Day':same_day,
 				'Data Type':'Data',
 				'Proportion of Joint Retrieval': depmean[0],
 				'Age': age
@@ -95,6 +103,7 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			{
 				'Subject': subject,
 				'Delay':delay,
+				'Same Day':same_day,
 				'Data Type':'Independent Model',
 				'Proportion of Joint Retrieval': depmean[1],
 				'Age': age
@@ -103,6 +112,7 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			{
 				'Subject': subject,
 				'Delay':delay,
+				'Same Day':same_day,
 				'Same Day':tmp['Same Day'].iloc[0],
 				'Dependency':depmean[0] - depmean[1],
 				'Age': age,
@@ -117,12 +127,14 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 		
 outputdf = pd.DataFrame(output)
 pairaccuracydf = pd.DataFrame(pairaccuracy)
+pairaccuracycoldf = pd.DataFrame(pairaccuracycol)
 meanoutputdf = pd.DataFrame(meanoutput)
 dependencydf = pd.DataFrame(dependencylist)
 
 dependencydf.to_csv('csvs/Dependency_Year_'+str(year)+'.csv',index=False)
-pairaccuracydf.to_csv('csvs/PC_pairs.csv',index=False)
-outputdf.to_csv('csvs/PC_outputdf.csv',index=False)
+pairaccuracydf.to_csv('csvs/PC_pairs_'+str(year)+'.csv',index=False)
+pairaccuracycoldf.to_csv('csvs/PC_pairs_col_'+str(year)+'.csv',index=False)
+outputdf.to_csv('csvs/PC_outputdf_'+str(year)+'.csv',index=False)
 
 # condense outputdf
 outputcond = []
@@ -141,8 +153,8 @@ for subject in Contdict[year].keys():
 		outputcond.append(dict(d_, **d))
 outputconddf = pd.DataFrame(outputcond)
 outputplotdf = pd.DataFrame(outputplot)
-outputconddf.to_csv('csvs/PC_outputconddf.csv',index=False)
-outputplotdf.to_csv('csvs/PC_outputplotdf.csv',index=False)
+outputconddf.to_csv('csvs/PC_outputconddf_'+str(year)+'.csv',index=False)
+outputplotdf.to_csv('csvs/PC_outputplotdf_'+str(year)+'.csv',index=False)
 
 # exclude all subjects with over 95% accuracy:
 dependencydf = dependencydf[dependencydf['Accuracy']<0.95]
