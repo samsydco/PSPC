@@ -25,17 +25,27 @@ PSkey = {-1:'Foil',1:'Target',0:'Lure'}
 
 output = []
 percatoutput = []
+percatanova = []
 for subject,tmp in tqdm.tqdm(Contdict[year].items()):
 	PStmp = tmp[PScols].to_numpy()
 	tmpdf = datadf[datadf['Subject']==subject]
 	age = tmpdf['Age'].values[0]
 	sex = tmpdf['Gender'].iloc[0]
 	delay=tmpdf['Delay'].iloc[0]
+	same_day=tmpdf['Same Day'].iloc[0]
 	nitems = np.count_nonzero(~np.isnan(PStmp.astype(float))) # PStmp.size (if did both blocks)
-	d_ = {'Subject': subject,'Delay':delay,'Age':age,'Sex':sex}
+	d_ = {'Subject': subject,'Same Day':same_day,'Delay':delay,'Age':age,'Sex':sex}
 	d = d_.copy()
 	for col in PScols:
+		d3 = d_.copy()
+		d3['Item'] = col
 		d[col+' target selection rate'] = np.count_nonzero(tmp[col] == 1) / (nitems/3)
+		d[col+' lure selection rate'] = np.count_nonzero(tmp[col] == 0) / (nitems/3)
+		d[col+' foil selection rate'] = np.count_nonzero(tmp[col] == -1) / (nitems/3)
+		d3['Target'] = d[col+' target selection rate']
+		d3['Lure'] = d[col+' lure selection rate']
+		d3['Foil'] = d[col+' foil selection rate']
+		percatanova.append(d3)
 	for value in PSkey.keys():
 		d2 = d_.copy()
 		d2['Selection'] = PSkey[value]
@@ -47,16 +57,18 @@ for subject,tmp in tqdm.tqdm(Contdict[year].items()):
 	percatoutput.append(d)
 	
 outputdf = pd.DataFrame(output)
-outputdf.to_csv('csvs/PSoutputdf_exactage.csv',index=False)
+outputdf.to_csv('csvs/PSoutputdf_exactage_'+str(year)+'.csv',index=False)
 percatoutputdf = pd.DataFrame(percatoutput)
+percatanovadf = pd.DataFrame(percatanova)
 outputdf.to_csv('csvs/PS_Year_'+str(year)+'.csv',index=False)
 percatoutputdf.to_csv('csvs/PS_cat_Year_'+str(year)+'.csv',index=False)
+percatanovadf.to_csv('csvs/PS_cat_anova_Year_'+str(year)+'.csv',index=False)
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
-delaydf = outputdf[(outputdf.Delay)]
-nodelaydf = outputdf[(outputdf.Delay == False)]
+#delaydf = outputdf[(outputdf.Delay)]
+#nodelaydf = outputdf[(outputdf.Delay == False)]
 
-outputdf.to_csv('csvs/PSoutputdf.csv',index=False)
-delaydf.to_csv('csvs/PSdelaydf.csv',index=False)
+outputdf.to_csv('csvs/PSoutputdf_'+str(year)+'.csv',index=False)
+delaydf.to_csv('csvs/PSdelaydf_'+str(year)+'.csv',index=False)
 
 order = ['Target','Lure','Foil']
 orderage = [4,5,6,7]
