@@ -68,11 +68,12 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 
 df = pd.DataFrame(dflist)
 df["group"] = 1
+df.to_csv('csvs/Per_event_Year_'+str(year)+'.csv',index=False)
 # Exclude perfectly dependent events:
 df_ = df[(df['N PC correct'] != 0) & (df['N PC correct'] != 6)]
 # OR Exclude perfectly dependent subjects:
 dependencydf = pd.read_csv('csvs/Dependency_Year_1.csv')
-excludedf = dependencydf[dependencydf['Accuracy']>0.95]
+excludedf = dependencydf[(dependencydf['Accuracy']>0.95) | dependencydf['Accuracy']<0.30]
 exclude_subjs = excludedf['Subject']
 df_ex = df_[~df_.Subject.isin(exclude_subjs)]
 

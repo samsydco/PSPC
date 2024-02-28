@@ -19,6 +19,11 @@ datadf = pd.read_csv('csvs/datadf.csv')
 Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
 
+# for interns
+datadf = pd.read_csv('csvs/interndatadf.csv')
+Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
+
+
 
 PScols = ['object','location','animal']
 PSkey = {-1:'Foil',1:'Target',0:'Lure'}
@@ -64,11 +69,7 @@ outputdf.to_csv('csvs/PS_Year_'+str(year)+'.csv',index=False)
 percatoutputdf.to_csv('csvs/PS_cat_Year_'+str(year)+'.csv',index=False)
 percatanovadf.to_csv('csvs/PS_cat_anova_Year_'+str(year)+'.csv',index=False)
 outputdf['Age'] = outputdf['Age'].map(lambda age: math.floor(age))
-#delaydf = outputdf[(outputdf.Delay)]
-#nodelaydf = outputdf[(outputdf.Delay == False)]
-
 outputdf.to_csv('csvs/PSoutputdf_'+str(year)+'.csv',index=False)
-delaydf.to_csv('csvs/PSdelaydf_'+str(year)+'.csv',index=False)
 
 order = ['Target','Lure','Foil']
 orderage = [4,5,6,7]

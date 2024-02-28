@@ -12,12 +12,16 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
-year = 2
+year = 1
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('csvs/datadf.csv')
 Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
+
+# for interns
+datadf = pd.read_csv('csvs/interndatadf.csv')
+Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
 
 
 PCcols = ['Ab', 'Bc', 'Ba', 'Cb', 'Ac', 'Ca']
@@ -136,6 +140,12 @@ pairaccuracydf.to_csv('csvs/PC_pairs_'+str(year)+'.csv',index=False)
 pairaccuracycoldf.to_csv('csvs/PC_pairs_col_'+str(year)+'.csv',index=False)
 outputdf.to_csv('csvs/PC_outputdf_'+str(year)+'.csv',index=False)
 
+# for interns:
+dependencydf.to_csv('csvs/Dependency_intern_'+str(year)+'.csv',index=False)
+pairaccuracydf.to_csv('csvs/PC_pairs_intern_'+str(year)+'.csv',index=False)
+pairaccuracycoldf.to_csv('csvs/PC_pairs_col_intern_'+str(year)+'.csv',index=False)
+outputdf.to_csv('csvs/PC_outputdf_intern_'+str(year)+'.csv',index=False)
+
 # condense outputdf
 outputcond = []
 outputplot = []
@@ -155,6 +165,10 @@ outputconddf = pd.DataFrame(outputcond)
 outputplotdf = pd.DataFrame(outputplot)
 outputconddf.to_csv('csvs/PC_outputconddf_'+str(year)+'.csv',index=False)
 outputplotdf.to_csv('csvs/PC_outputplotdf_'+str(year)+'.csv',index=False)
+
+# FOR INTERNS
+outputconddf.to_csv('csvs/PC_outputconddf_intern_'+str(year)+'.csv',index=False)
+outputplotdf.to_csv('csvs/PC_outputplotdf_intern_'+str(year)+'.csv',index=False)
 
 # exclude all subjects with over 95% accuracy:
 dependencydf = dependencydf[dependencydf['Accuracy']<0.95]

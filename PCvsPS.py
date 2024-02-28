@@ -3,9 +3,11 @@
 # PC vs PS
 # Each subject gets one point (average PC and average PS across all trials)
 
+import numpy as np
 import pandas as pd
 from scipy import stats
 import statsmodels.formula.api as sm2
+import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
@@ -21,11 +23,12 @@ if len(missingdf)==1 and missingdf['Subject'].iloc[0]=='MDEM127':
 	combodf = combodf.drop(combodf[combodf['Subject']=='MDEM127'].index)
 
 # High performing PC subjects:
-excludedf = PCdf[PCdf['Accuracy']>0.95]
+excludedf = PCdf[(PCdf['Accuracy']>0.95) & (PCdf['Accuracy']<0.30)]
 exclude_subjs = excludedf['Subject']
 
+titlelist = ['Target (Correct)', 'Lure (Similar)', 'Foil']
 pslabeldict = {'Target': 'Target (Correct) Selection Rate', 'Lure': 'Lure (Similar) Selection Rate', 'Foil': 'Foil Selection Rate'}
-pclabeldict = {'Accuracy':'PC Accuracy','Dependency':'Dependency'}
+pclabeldict = {'Accuracy':'Pairwise associative memory ','Dependency':'Dependency'}
 delaydict = {False:'Immediate',True:'Delayed'}
 #combodf.rename(columns=labeldict, inplace=True)
 
@@ -51,7 +54,7 @@ for exclude in [True]:#,False]:
 				tmpplt.rename(columns={pc: pclabeldict[pc]}, inplace=True)
 				#fig, ax = plt.subplots(1, figsize=(5, 5))
 				sns.regplot(data=tmpplt,x=pslabeldict[ps], y=pclabeldict[pc],ax=ax1[i],label=delaydict[delay])
-				ax1[i].set_title('Delay = '+str(delay)+'\n'+'Removing good subjs = '+str(exclude))
+				ax1[i].set_title(titlelist[i])
 				statlist.append({'Controlling for Age':False,
 								'Exclude':exclude,
 								'PC':pc,
@@ -66,12 +69,12 @@ for exclude in [True]:#,False]:
 				PSreg = LinearRegression().fit(tmp[['Age']], tmp[ps])
 				PCresiduals = tmp[pc] - PCreg.predict(tmp[['Age']])
 				PSresiduals = tmp[ps] - PSreg.predict(tmp[['Age']])
-				residualsdf = pd.DataFrame({pslabeldict[ps]: PSresiduals, 
-											pclabeldict[pc]: PCresiduals})
+				residualsdf = pd.DataFrame({pslabeldict[ps]+' | Age': PSresiduals, 
+											pclabeldict[pc]+' | Age': PCresiduals})
 				# Partial regression plot
 				#f, ax = plt.subplots(figsize=(6, 6))
-				sns.regplot(data=residualsdf,x=pslabeldict[ps], y=pclabeldict[pc] ,ax=ax2[i],label=delaydict[delay])
-				ax2[i].set_title('Delay = '+str(delay)+'\n'+'Removing good subjs = '+str(exclude)+'\n Controlling for Age')
+				sns.regplot(data=residualsdf,x=pslabeldict[ps]+' | Age', y=pclabeldict[pc]+' | Age' ,ax=ax2[i],label=delaydict[delay])
+				ax1[i].set_title(titlelist[i])
 				# r-value from t-value:
 				t_value = result.tvalues[ps]
 				df = result.df_resid

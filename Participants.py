@@ -10,6 +10,7 @@ import glob
 import numpy as np
 import pandas as pd
 from itertools import compress
+from datetime import datetime
 
 onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/'
 onedrive_datapath = onedrive_path+'Data/'
@@ -36,12 +37,13 @@ df = df[df['redcap_event_name'].str.contains('year1')]
 df['Delay'] = df.apply(lambda row: row.session_date > "2023-03-01", axis=1)
 df=df.drop(['session_date','redcap_event_name'],axis=1)
 df = df.rename({'demo_age': 'Age','participant_id':'MDEM ID'}, axis='columns')
-df_all = partlog.merge(df.drop_duplicates(), on=['MDEM ID'],how='left', indicator=True)
+# Drop subject MDEM131 Due to language proficiency:
+df = df[df['MDEM ID'] != 'MDEM131']
+df_all = partlog.merge(df, on=['MDEM ID'],how='left', indicator=True)
 missing_demo = df_all[df_all['_merge'] == 'left_only']
-sess_1_subjs = df_all[df_all['Completed S1 & S2?'] != 'X']
-sess_1_subjs = sess_1_subjs[sess_1_subjs['Delay'] != False] # This only matters for Subjs in delay condition! 
+sess_1_subjs = df_all[(df_all['Completed S1 & S2?'] != 'X') & (df_all['Delay'] != False)] # This only matters for Subjs in delay condition! 
 print(str(len(sess_1_subjs))+' subjects did not return for the second session where PSPC memory was tested.')
-df_all = df_all[df_all['Completed S1 & S2?'] == 'X']
+df_all = df_all[~df_all['MDEM ID'].isin(sess_1_subjs['MDEM ID'])]
 df_all = df_all.drop(df_all.columns[-1],axis=1)
 
 # Subjects with PSPC data:
@@ -71,12 +73,37 @@ datadf = pd.DataFrame(data)
 datadf = datadf[~datadf['MDEM ID'].str.contains("TEST")]
 
 # removing 9 o.g. version subjects:
+print(str(len(datadf[datadf['Same_Day'] == False]))+' subjects did original pilot experiment.')
 datadf = datadf[datadf['Same_Day'] == True]
 
 df_all_ = df_all.merge(datadf, on=['MDEM ID'],how='left', indicator=True)
-df_all_[df_all_['_merge'] == 'left_only']
+df_all_ = df_all_[df_all_['_merge'] == 'both']
 
 missing_elliot = ['MDEM052','MDEM055','MDEM057','MDEM058']
-print(str(len)+' are missing due to experimenter error (Elliot).')
+print(str(len(missing_elliot))+' are missing due to experimenter error (Elliot).')
 
+# Age and sex breakdown:
+print('N = '+str(len(df_all_)))
+print('Ages ranged from: '+str(np.min(df_all_['Age']))+' - '+\
+	  str(np.max(df_all_['Age']))+' years, Mean = '+\
+	  str(np.round(np.mean(df_all_['Age']),2))+\
+	  ' +/- '+str(np.round(np.std(df_all_['Age']),2)))
+print(df_all_['demo_child_gender'].value_counts())
+
+# determine delay between session 1 and session 2
+demofiles = glob.glob(onedrive_datapath+'R01MarvelousMoments*')
+demofile = max(demofiles, key=os.path.getctime)
+df = pd.read_csv(demofile)
+df = df[df['redcap_event_name'].str.contains("year1")]
+		
+delaylist = []
+for s in df_all_['MDEM ID'].unique():
+	if df_all_[df_all_['MDEM ID'] == s]['Delay'].iloc[0] == True:
+		dates = list(df[df['participant_id'] == s]['session_date'])
+		delay = (datetime.strptime(dates[1], "%Y-%m-%d") - 
+				 datetime.strptime(dates[0], "%Y-%m-%d")).days
+		delaylist.append({'Subject':s,
+						 'Delay Days':delay})
+delaydf = pd.DataFrame(delaylist)
+delaydf.to_csv('csvs/Delay_Days_1.csv',index=False)		
 
