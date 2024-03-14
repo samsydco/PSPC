@@ -28,7 +28,7 @@ exclude_subjs = excludedf['Subject']
 
 titlelist = ['Target (Correct)', 'Lure (Similar)', 'Foil']
 pslabeldict = {'Target': 'Target (Correct) Selection Rate', 'Lure': 'Lure (Similar) Selection Rate', 'Foil': 'Foil Selection Rate'}
-pclabeldict = {'Accuracy':'Pairwise associative memory ','Dependency':'Dependency'}
+pclabeldict = {'Accuracy':'Relational Binding','Dependency':'Holistic Recollection'}
 delaydict = {False:'Immediate',True:'Delayed'}
 #combodf.rename(columns=labeldict, inplace=True)
 
