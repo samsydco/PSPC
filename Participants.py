@@ -90,6 +90,18 @@ print('Ages ranged from: '+str(np.min(df_all_['Age']))+' - '+\
 	  ' +/- '+str(np.round(np.std(df_all_['Age']),2)))
 print(df_all_['demo_child_gender'].value_counts())
 
+# Histogram of age and gender:
+import seaborn as sns
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+sns.set_theme(style="ticks",font_scale=1.5)
+df_hist = df_all_.rename(columns={'demo_child_gender':'Sex'})
+df_hist['Sex'] = df_hist['Sex'].replace({1.0: 'Male', 2.0: 'Female'})
+df_hist = df_hist[df_hist['Delay']==True]
+f, ax = plt.subplots(figsize=(7, 5))
+sns.despine(f)
+sns.histplot(df_hist,x='Age', hue="Sex",multiple="stack",palette="hls")
+
 # determine delay between session 1 and session 2
 demofiles = glob.glob(onedrive_datapath+'R01MarvelousMoments*')
 demofile = max(demofiles, key=os.path.getctime)
