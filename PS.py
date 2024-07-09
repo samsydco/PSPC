@@ -12,7 +12,7 @@ import seaborn as sns
 import math
 from scipy import stats
 
-year = 1
+year = 2
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('csvs/datadf.csv')
@@ -20,8 +20,8 @@ Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
 
 # for interns
-datadf = pd.read_csv('csvs/interndatadf.csv')
-Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
+#datadf = pd.read_csv('csvs/interndatadf.csv')
+#Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
 
 
 
