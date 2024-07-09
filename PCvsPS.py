@@ -12,6 +12,7 @@ import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
 sns.set_theme(style="white",font_scale=1.5, palette=['#6e90bf',  '#d9a6a4', '#c26f6d'])
+sns.set_theme(style="white",font_scale=2, palette=['#6e90bf',  '#d9a6a4', '#c26f6d'])
 
 PSdf = pd.read_csv('csvs/PS_cat_Year_1.csv')
 PCdf = pd.read_csv('csvs/Dependency_Year_1.csv')
@@ -34,7 +35,7 @@ delaydict = {False:'Immediate',True:'Delayed'}
 
 statlist = []
 for exclude in [True]:#,False]:
-	for pc in ['Accuracy','Dependency']:
+	for pc in ['Accuracy']:#,'Dependency']:
 		f1, ax1 = plt.subplots(1,3,figsize=(15, 5))
 		f2, ax2 = plt.subplots(1,3,figsize=(18, 6))
 		for delay in [False,True]:
@@ -93,11 +94,14 @@ for exclude in [True]:#,False]:
 					ax1[i].set(ylabel=None)
 					ax2[i].set(ylabel=None)
 		handles1, labels1 = ax1[i].get_legend_handles_labels()
-		l1 = f1.legend(handles1, labels1, bbox_to_anchor=(1.12, .9), borderaxespad=0.)
+		l1 = f1.legend(handles1, labels1, bbox_to_anchor=(1.16, .87), borderaxespad=0.)
 		handles2, labels2 = ax2[i].get_legend_handles_labels()
-		l2 = f2.legend(handles2, labels2, bbox_to_anchor=(1.1, .9), borderaxespad=0.)
+		l2 = f2.legend(handles2, labels2, bbox_to_anchor=(1.13, .94), borderaxespad=0.)
 		f1.tight_layout()
 		f2.tight_layout()
+		if pc == 'Accuracy':
+			f1.savefig('Figures/Figure4.png', dpi=300,bbox_inches="tight")
+			f1.show()
 statdf=pd.DataFrame(statlist)
 display(statdf)
 				
