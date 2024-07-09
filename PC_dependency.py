@@ -4,6 +4,7 @@ import tqdm as tqdm
 import deepdish as dd
 import pandas as pd
 from dependency import dependency
+from dependency_v_correct import dependency_v_correct
 import numpy as np
 import math
 import seaborn as sns
@@ -12,7 +13,7 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
-year = 1
+year = 2
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('csvs/datadf.csv')
@@ -20,8 +21,8 @@ Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
 
 # for interns
-datadf = pd.read_csv('csvs/interndatadf.csv')
-Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
+#datadf = pd.read_csv('csvs/interndatadf.csv')
+#Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
 
 
 PCcols = ['Ab', 'Bc', 'Ba', 'Cb', 'Ac', 'Ca']
@@ -39,6 +40,7 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 	else:
 		tmp = datadf[datadf['Subject']==subject]
 		dep_all = np.nan*np.zeros((len(pair_array),3))
+		dep_all_corr = np.nan*np.zeros((len(pair_array),2))
 		dep_all1 = np.nan*np.zeros((len(pair_array),3))
 		dep_all2 = np.nan*np.zeros((len(pair_array),3))
 		age = tmp['Age'].values[0]
@@ -66,6 +68,8 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 			res = res_tmp[PCcols] # no idea why this needs to be in loop
 			nitems = np.count_nonzero(~np.isnan(res.astype(float))) # should be 108 (if did both blocks)
 			dep = dependency (res, pair)
+			res = res_tmp[PCcols] # no idea why this needs to be in loop
+			depcorr = dependency_v_correct (res, pair)
 			resfirst = res_tmp[PCcols][:9].reset_index(drop=True)
 			ressecond = res_tmp[PCcols][9:].reset_index(drop=True)
 			depfirst = dependency (resfirst, pair)
@@ -83,15 +87,18 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 				'Pair': pair[0]+' '+pair[1],
 				'Cue':cue,
 				'Dependency':dep[0] - dep[1],
+				'Dependency correct':depcorr[0] - depcorr[1],
 				'Data': dep[0],
 				'Independent Model': dep[1],
 				'Dependent Model': dep[2],
 				'Accuracy': res_tmp[pair].stack().mean() 
 			})
 			dep_all[i]=dep
+			dep_all_corr[i]=depcorr
 			dep_all1[i]=depfirst
 			dep_all2[i]=depsecond
 		depmean = np.nanmean(dep_all,axis=0)
+		depmean_corr = np.nanmean(dep_all_corr,axis=0)
 		depmean1 = np.nanmean(dep_all1,axis=0)
 		depmean2 = np.nanmean(dep_all2,axis=0)
 		meanoutput.append(
@@ -101,6 +108,15 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 				'Same Day':same_day,
 				'Data Type':'Data',
 				'Proportion of Joint Retrieval': depmean[0],
+				'Age': age
+			})
+		meanoutput.append(
+			{
+				'Subject': subject,
+				'Delay':delay,
+				'Same Day':same_day,
+				'Data Type':'Data correct only',
+				'Proportion of Joint Retrieval': depmean_corr[0],
 				'Age': age
 			})
 		meanoutput.append(
@@ -119,6 +135,7 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 				'Same Day':same_day,
 				'Same Day':tmp['Same Day'].iloc[0],
 				'Dependency':depmean[0] - depmean[1],
+				'Dependency correct only':depmean_corr[0] - depmean_corr[1],
 				'Age': age,
 				'Accuracy':accuracy,
 				'Accuracy First':accuracyfirst,
@@ -156,7 +173,7 @@ for subject in Contdict[year].keys():
 			'Delay':tmp['Delay'].iloc[0],
 			'Age': tmp['Age'].iloc[0]}
 		d = {}
-		for col in ['Dependency','Data','Independent Model','Dependent Model','Accuracy']:
+		for col in ['Dependency','Data','Independent Model','Dependent Model','Accuracy','Dependency correct']:
 			d[col] = tmp[col].mean()
 			d2 = {'Model-type':col,'Dependency':d[col]}
 			outputplot.append(dict(d_, **d2))
