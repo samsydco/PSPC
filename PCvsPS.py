@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
-sns.set_theme(style="white",font_scale=1.5, palette=['#6e90bf',  '#d9a6a4', '#c26f6d'])
-sns.set_theme(style="white",font_scale=2, palette=['#6e90bf',  '#d9a6a4', '#c26f6d'])
+sns.set_theme(style="white",font_scale=1.5, palette=['#0D096E','#890505'])
+sns.set_theme(style="white",font_scale=2, palette=['#0D096E','#890505'])
 
 PSdf = pd.read_csv('csvs/PS_cat_Year_1.csv')
 PCdf = pd.read_csv('csvs/Dependency_Year_1.csv')
@@ -100,7 +100,7 @@ for exclude in [True]:#,False]:
 		f1.tight_layout()
 		f2.tight_layout()
 		if pc == 'Accuracy':
-			f1.savefig('Figures/Figure4.png', dpi=300,bbox_inches="tight")
+			f1.savefig('Figures/Figure3.tif', dpi=300,bbox_inches="tight",format='tif')
 			f1.show()
 statdf=pd.DataFrame(statlist)
 display(statdf)
