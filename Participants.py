@@ -15,7 +15,7 @@ from datetime import datetime
 onedrive_path = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/'
 onedrive_datapath = onedrive_path+'Data/'
 
-partlog = pd.read_excel(onedrive_path+'Testing Materials/R01 Participant Log.xlsx','Sheet1')
+partlog = pd.read_excel(onedrive_path+'R01 Participant Log.xlsx','Sheet1')
 partlog.columns = partlog.iloc[9]
 partlog = partlog.drop(partlog.columns[0],axis=1)
 partlog = partlog.drop(partlog.index[0:10])
