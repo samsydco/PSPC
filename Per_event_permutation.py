@@ -91,5 +91,5 @@ for pc in ['Dependency','N_PC_correct']:
 				axs[i].set_title(order[i])#(k+'\n'+order[i]+'\n'+'p = '+str(np.round(vals['pval'][k][selection][model][0],2)))
 			plt.tight_layout()
 			if pc == 'Dependency':
-				plt.savefig('Figures/Figure5.png', dpi=300,bbox_inches="tight")
+				plt.savefig('Figures/Figure4.tif', dpi=300,bbox_inches="tight",format='tif')
 			plt.show()
