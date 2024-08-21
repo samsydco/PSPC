@@ -8,7 +8,7 @@
 
 ### Code
 <ul>
-<li><u>For Mnemonic Discrimination Results:</u>
+<li>For Mnemonic Discrimination Results:
 <ul>
   <li><a href="https://github.com/samsydco/PSPC/blob/main/PS.py">PS.py</a>: Further refines data into dataframes for further analysis.</li>
   <li><a href="https://github.com/samsydco/PSPC/blob/main/Results_PS.ipynb">Results_PS.ipynb</a>: Extracts mnemonic discrimination data for results. Ultimately used to create Figure 1 in paper.</li>
