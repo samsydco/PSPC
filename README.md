@@ -1,6 +1,3 @@
-# PSPC
-Analysis of Pattern Separation and Pattern Completion Tasks
-
 # Code for analyses used in:
 # <i>"PATTERN SEPARATION AND PATTERN COMPLETION IN EARLY CHILDHOOD"</i>
 ## Samantha S. Cohen, Chi T. Ngo, Ingrid R. Olson, Nora S. Newcombe
