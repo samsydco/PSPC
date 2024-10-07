@@ -13,7 +13,7 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from decimal import Decimal
 
-year = 2
+year = 1
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('csvs/datadf.csv')
