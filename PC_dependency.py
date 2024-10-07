@@ -30,6 +30,7 @@ pair_array = [['Ab','Ac'],['Ba','Bc'],['Ca','Cb'],['Ba','Ca'],['Ac','Bc'],['Ab',
 ABC = {'A':'Place','B':'Animal','C':'Object'}
 
 pairaccuracy = []
+pairaccuracydaysplit = []
 pairaccuracycol = []
 output = [] # data, and independent model are seperate, seperate data for all pairs in pair_array
 meanoutput = [] # average across pairs for data and independent model
@@ -62,6 +63,21 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 				'To-be-retrieved': ABC[pair[1].upper()],
 				'Accuracy': res_tmp[pair].mean() 
 			})
+			for day in [1,2]:
+				tmpdaydf = res_tmp[PCcols][:9] if day == 1 else res_tmp[PCcols][9:] 
+				pairaccuracydaysplit.append(
+				{
+					'Subject': subject,
+					'Delay':delay,
+					'Same Day':same_day,
+					'Day':day,
+					'Age':age,
+					'Pair': ABC[pair[0]]+'->'+ABC[pair[1].upper()],
+					'ABpair':pair,
+					'Cue': ABC[pair[0]],
+					'To-be-retrieved': ABC[pair[1].upper()],
+					'Accuracy': tmpdaydf[pair].mean() 
+				})
 			d_[ABC[pair[0]]+'->'+ABC[pair[1].upper()]+' Accuracy'] =  res_tmp[pair].mean()
 		pairaccuracycol.append(d_)
 		for i,pair in enumerate(pair_array):
@@ -148,12 +164,14 @@ for subject,res_tmp in tqdm.tqdm(Contdict[year].items()):
 		
 outputdf = pd.DataFrame(output)
 pairaccuracydf = pd.DataFrame(pairaccuracy)
+pairaccuracydaysplitdf = pd.DataFrame(pairaccuracydaysplit)
 pairaccuracycoldf = pd.DataFrame(pairaccuracycol)
 meanoutputdf = pd.DataFrame(meanoutput)
 dependencydf = pd.DataFrame(dependencylist)
 
 dependencydf.to_csv('csvs/Dependency_Year_'+str(year)+'.csv',index=False)
 pairaccuracydf.to_csv('csvs/PC_pairs_'+str(year)+'.csv',index=False)
+pairaccuracydaysplitdf.to_csv('csvs/PC_pairs_daysplit_'+str(year)+'.csv',index=False)
 pairaccuracycoldf.to_csv('csvs/PC_pairs_col_'+str(year)+'.csv',index=False)
 outputdf.to_csv('csvs/PC_outputdf_'+str(year)+'.csv',index=False)
 
