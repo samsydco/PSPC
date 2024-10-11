@@ -45,6 +45,8 @@ for i in tqdm.tqdm(range(Nshuff+1)):
 	# Exclude perfectly dependent events:
 	tmprand_ = tmprand[(tmprand['N_PC_correct'] != 0) & (tmprand['N_PC_correct'] != 6)]
 	tmprand_ex = tmprand_[~tmprand_.Subject.isin(exclude_subjs)]
+	if i == 0:
+		tmprand_ex.to_csv('csvs/Per_event_dependency_Year_'+str(year)+'.csv',index=False)
 	for selection in ['Target','Lure','Foil']:
 		#d_ = {'All data':tmprand,'No perfectly dependent events':tmprand_,'No perfect subjects':tmprand_}
 		d_ = {'No perfect subjects':tmprand_}
