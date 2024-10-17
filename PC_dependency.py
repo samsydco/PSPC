@@ -20,11 +20,6 @@ datadf = pd.read_csv('csvs/datadf.csv')
 Contdict = dd.io.load('csvs/PSPC_cont_tables.h5')
 datadf = datadf[datadf['Year'] == year]
 
-# for interns
-#datadf = pd.read_csv('csvs/interndatadf.csv')
-#Contdict = dd.io.load('csvs/Intern_cont_tables.h5')
-
-
 PCcols = ['Ab', 'Bc', 'Ba', 'Cb', 'Ac', 'Ca']
 pair_array = [['Ab','Ac'],['Ba','Bc'],['Ca','Cb'],['Ba','Ca'],['Ac','Bc'],['Ab','Cb']]
 ABC = {'A':'Place','B':'Animal','C':'Object'}
@@ -174,12 +169,6 @@ pairaccuracydf.to_csv('csvs/PC_pairs_'+str(year)+'.csv',index=False)
 pairaccuracydaysplitdf.to_csv('csvs/PC_pairs_daysplit_'+str(year)+'.csv',index=False)
 pairaccuracycoldf.to_csv('csvs/PC_pairs_col_'+str(year)+'.csv',index=False)
 outputdf.to_csv('csvs/PC_outputdf_'+str(year)+'.csv',index=False)
-
-# for interns:
-dependencydf.to_csv('csvs/Dependency_intern_'+str(year)+'.csv',index=False)
-pairaccuracydf.to_csv('csvs/PC_pairs_intern_'+str(year)+'.csv',index=False)
-pairaccuracycoldf.to_csv('csvs/PC_pairs_col_intern_'+str(year)+'.csv',index=False)
-outputdf.to_csv('csvs/PC_outputdf_intern_'+str(year)+'.csv',index=False)
 
 # condense outputdf
 outputcond = []
