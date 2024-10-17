@@ -190,10 +190,6 @@ outputplotdf = pd.DataFrame(outputplot)
 outputconddf.to_csv('csvs/PC_outputconddf_'+str(year)+'.csv',index=False)
 outputplotdf.to_csv('csvs/PC_outputplotdf_'+str(year)+'.csv',index=False)
 
-# FOR INTERNS
-outputconddf.to_csv('csvs/PC_outputconddf_intern_'+str(year)+'.csv',index=False)
-outputplotdf.to_csv('csvs/PC_outputplotdf_intern_'+str(year)+'.csv',index=False)
-
 # exclude all subjects with over 95% accuracy:
 dependencydf = dependencydf[dependencydf['Accuracy']<0.95]
 
