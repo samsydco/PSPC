@@ -12,7 +12,7 @@ import seaborn as sns
 import math
 from scipy import stats
 
-year = 1
+year = 2
 
 figurepath = 'C:/Users/tuq67942/OneDrive - Temple University/Documents/Figures/'
 datadf = pd.read_csv('csvs/datadf.csv')
